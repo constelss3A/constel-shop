@@ -33,10 +33,6 @@ import { SubMenuCustomContextMenuComponent } from './main/extensions/context-men
 
 const appRoutes: Routes = [
   {
-    path: 'dashboard',
-    loadChildren: () => import('./main/dashboard/dashboard.module').then(m => m.DashboardModule)
-  },
-  {
     path: 'apps',
     loadChildren: () => import('./main/apps/apps.module').then(m => m.AppsModule),
     canActivate: [AuthGuard]
@@ -71,13 +67,8 @@ const appRoutes: Routes = [
     canActivate: [AuthGuard]
   },
   {
-    path: 'charts-and-maps',
-    loadChildren: () => import('./main/charts-and-maps/charts-and-maps.module').then(m => m.ChartsAndMapsModule),
-    canActivate: [AuthGuard]
-  },
-  {
     path: '',
-    redirectTo: '/e-commerce/shop',
+    redirectTo: 'apps/e-commerce/shop',
     pathMatch: 'full'
   },
   {

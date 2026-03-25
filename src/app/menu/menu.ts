@@ -3,31 +3,6 @@ import { CoreMenu } from '@core/types';
 //? DOC: http://localhost:7777/demo/vuexy-angular-admin-dashboard-template/documentation/guide/development/navigation-menus.html#interface
 
 export const menu: CoreMenu[] = [
-  // Dashboard
-  {
-    id: 'dashboard',
-    title: 'Dashboard',
-    translate: 'MENU.DASHBOARD.COLLAPSIBLE',
-    type: 'collapsible',
-    // role: ['Admin'], //? To hide collapsible based on user role
-    icon: 'home',
-    badge: {
-      title: '1',
-      translate: 'MENU.DASHBOARD.BADGE',
-      classes: 'badge-light-warning badge-pill'
-    },
-    children: [
-      {
-        // If role is not assigned will be display to all
-        id: 'ecommerce',
-        title: 'eCommerce',
-        translate: 'MENU.DASHBOARD.ECOMMERCE',
-        type: 'item',
-        icon: 'circle',
-        url: 'dashboard/ecommerce'
-      }
-    ]
-  },
   // Apps & Pages
   {
     id: 'apps',
@@ -36,38 +11,6 @@ export const menu: CoreMenu[] = [
     translate: 'MENU.APPS.SECTION',
     icon: 'package',
     children: [
-      {
-        id: 'email',
-        title: 'Email',
-        translate: 'MENU.APPS.EMAIL',
-        type: 'item',
-        icon: 'mail',
-        url: 'apps/email'
-      },
-      {
-        id: 'chat',
-        title: 'Chat',
-        translate: 'MENU.APPS.CHAT',
-        type: 'item',
-        icon: 'message-square',
-        url: 'apps/chat'
-      },
-      {
-        id: 'todo',
-        title: 'Todo',
-        translate: 'MENU.APPS.TODO',
-        type: 'item',
-        icon: 'check-square',
-        url: 'apps/todo'
-      },
-      {
-        id: 'calendar',
-        title: 'Calendar',
-        translate: 'MENU.APPS.CALENDAR',
-        type: 'item',
-        icon: 'calendar',
-        url: 'apps/calendar'
-      },
       {
         id: 'pages',
         title: 'Pages',
@@ -166,22 +109,6 @@ export const menu: CoreMenu[] = [
             // collapsed: true
           },
           {
-            id: 'faq',
-            title: 'FAQ',
-            translate: 'MENU.PAGES.FAQ',
-            type: 'item',
-            icon: 'circle',
-            url: 'pages/faq'
-          },
-          {
-            id: 'knowledgeBase',
-            title: 'Knowledge Base',
-            translate: 'MENU.PAGES.KB',
-            type: 'item',
-            icon: 'circle',
-            url: 'pages/knowledge-base'
-          },
-          {
             id: 'pricing',
             title: 'Pricing',
             translate: 'MENU.PAGES.PRICING',
@@ -189,102 +116,6 @@ export const menu: CoreMenu[] = [
             icon: 'circle',
             url: 'pages/pricing'
           },
-
-          {
-            id: 'blog',
-            title: 'Blog',
-            translate: 'MENU.PAGES.BLOG.COLLAPSIBLE',
-            type: 'collapsible',
-            icon: 'circle',
-            children: [
-              {
-                id: 'blog-list',
-                title: 'List',
-                translate: 'MENU.PAGES.BLOG.LIST',
-                type: 'item',
-                url: 'pages/blog-list'
-              },
-              {
-                id: 'blog-details',
-                title: 'Detail',
-                translate: 'MENU.PAGES.BLOG.DETAILS',
-                type: 'item',
-                url: 'pages/blog-details'
-              },
-              {
-                id: 'blog-edit',
-                title: 'Edit',
-                translate: 'MENU.PAGES.BLOG.EDIT',
-                type: 'item',
-                url: 'pages/blog-edit'
-              }
-            ]
-          },
-
-          {
-            id: 'mail-template',
-            title: 'Mail Template',
-            translate: 'MENU.PAGES.MAIL.COLLAPSIBLE',
-            type: 'collapsible',
-            icon: 'circle',
-            children: [
-              {
-                id: 'mail-welcome',
-                title: 'Welcome',
-                translate: 'MENU.PAGES.MAIL.WELCOME',
-                type: 'item',
-                url: 'https://pixinvent.com/demo/vuexy-mail-template/mail-welcome.html',
-                externalUrl: true,
-                openInNewTab: true
-              },
-              {
-                id: 'mail-reset',
-                title: 'Reset Password',
-                translate: 'MENU.PAGES.MAIL.RESET',
-                type: 'item',
-                url: 'https://pixinvent.com/demo/vuexy-mail-template/mail-reset-password.html',
-                externalUrl: true,
-                openInNewTab: true
-              },
-              {
-                id: 'mail-verify',
-                title: 'Verify',
-                translate: 'MENU.PAGES.MAIL.VERIFY',
-                type: 'item',
-                url: 'https://pixinvent.com/demo/vuexy-mail-template/mail-verify-email.html',
-                externalUrl: true,
-                openInNewTab: true
-              },
-              {
-                id: 'mail-deactivate',
-                title: 'Deactivate',
-                translate: 'MENU.PAGES.MAIL.DEACTIVATE',
-                type: 'item',
-                url: 'https://pixinvent.com/demo/vuexy-mail-template/mail-deactivate-account.html',
-                externalUrl: true,
-                openInNewTab: true
-              },
-              {
-                id: 'mail-invoice',
-                title: 'Invoice',
-                translate: 'MENU.PAGES.MAIL.INVOICE',
-                type: 'item',
-                url: 'https://pixinvent.com/demo/vuexy-mail-template/mail-invoice.html',
-                externalUrl: true,
-                openInNewTab: true
-              },
-              {
-                id: 'mail-promotional',
-                title: 'Promotional',
-                translate: 'MENU.PAGES.MAIL.PROMOTIONAL',
-                type: 'item',
-                url: 'https://pixinvent.com/demo/vuexy-mail-template/mail-promotional.html',
-                externalUrl: true,
-                openInNewTab: true
-              }
-            ]
-          },
-
           {
             id: 'miscellaneous',
             title: 'Miscellaneous',
@@ -330,47 +161,6 @@ export const menu: CoreMenu[] = [
         ]
       },
       {
-        id: 'invoice',
-        title: 'Invoice',
-        translate: 'MENU.APPS.INVOICE.COLLAPSIBLE',
-        type: 'collapsible',
-        icon: 'file-text',
-        children: [
-          {
-            id: 'invoice-list',
-            title: 'List',
-            translate: 'MENU.APPS.INVOICE.LIST',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/invoice/list'
-          },
-          {
-            id: 'invoicePreview',
-            title: 'Preview',
-            translate: 'MENU.APPS.INVOICE.PREVIEW',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/invoice/preview'
-          },
-          {
-            id: 'invoiceEdit',
-            title: 'Edit',
-            translate: 'MENU.APPS.INVOICE.EDIT',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/invoice/edit'
-          },
-          {
-            id: 'invoiceAdd',
-            title: 'Add',
-            translate: 'MENU.APPS.INVOICE.ADD',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/invoice/add'
-          }
-        ]
-      },
-      {
         id: 'e-commerce',
         title: 'eCommerce',
         translate: 'MENU.APPS.ECOMMERCE.COLLAPSIBLE',
@@ -411,39 +201,6 @@ export const menu: CoreMenu[] = [
           }
         ]
       },
-      {
-        id: 'users',
-        title: 'User',
-        translate: 'MENU.APPS.USER.COLLAPSIBLE',
-        type: 'collapsible',
-        icon: 'user',
-        children: [
-          {
-            id: 'list',
-            title: 'List',
-            translate: 'MENU.APPS.USER.LIST',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/user/user-list'
-          },
-          {
-            id: 'view',
-            title: 'View',
-            translate: 'MENU.APPS.USER.VIEW',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/user/user-view'
-          },
-          {
-            id: 'edit',
-            title: 'Edit',
-            translate: 'MENU.APPS.USER.EDIT',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/user/user-edit'
-          }
-        ]
-      }
     ]
   },
   // User Interface
@@ -838,55 +595,6 @@ export const menu: CoreMenu[] = [
           }
         ]
       },
-      {
-        id: 'page-layouts',
-        title: 'Page Layouts',
-        translate: 'MENU.UI.LAYOUTS.COLLAPSIBLE',
-        type: 'collapsible',
-        icon: 'layout',
-        children: [
-          {
-            id: 'layout-collapsed-menu',
-            title: 'Collapsed Menu',
-            translate: 'MENU.UI.LAYOUTS.COLLAPSED_MENU',
-            icon: 'circle',
-            type: 'item',
-            url: 'ui/page-layouts/collapsed-menu'
-          },
-          {
-            id: 'layout-boxed',
-            title: 'Boxed Layout',
-            translate: 'MENU.UI.LAYOUTS.BOXED_LAYOUT',
-            icon: 'circle',
-            type: 'item',
-            url: 'ui/page-layouts/boxed-layout'
-          },
-          {
-            id: 'layout-without-menu',
-            title: 'Without Menu',
-            translate: 'MENU.UI.LAYOUTS.WITHOUT_MENU',
-            icon: 'circle',
-            type: 'item',
-            url: 'ui/page-layouts/without-menu'
-          },
-          {
-            id: 'layout-empty',
-            title: 'Layout Empty',
-            translate: 'MENU.UI.LAYOUTS.LAYOUT_EMPTY',
-            icon: 'circle',
-            type: 'item',
-            url: 'ui/page-layouts/layout-empty'
-          },
-          {
-            id: 'layout-blank',
-            title: 'Layout Blank',
-            translate: 'MENU.UI.LAYOUTS.LAYOUT_BLANK',
-            icon: 'circle',
-            type: 'item',
-            url: 'ui/page-layouts/layout-blank'
-          }
-        ]
-      }
     ]
   },
   // Forms & Tables
@@ -1060,54 +768,6 @@ export const menu: CoreMenu[] = [
       }
     ]
   },
-  // Charts & Maps
-  {
-    id: 'charts-maps',
-    type: 'section',
-    title: 'Charts & Maps',
-    translate: 'MENU.CM.SECTION',
-    icon: 'bar-chart-2',
-    children: [
-      {
-        id: 'charts',
-        title: 'Charts',
-        translate: 'MENU.CM.CHARTS.COLLAPSIBLE',
-        type: 'collapsible',
-        icon: 'pie-chart',
-        badge: {
-          title: '2',
-          translate: 'MENU.CM.CHARTS.BADGE',
-          classes: 'badge-light-danger badge-pill'
-        },
-        children: [
-          {
-            id: 'apex',
-            title: 'Apex',
-            translate: 'MENU.CM.CHARTS.APEX',
-            type: 'item',
-            icon: 'circle',
-            url: 'charts-and-maps/apex'
-          },
-          {
-            id: 'chartJs',
-            title: 'ChartJS',
-            translate: 'MENU.CM.CHARTS.CHARTJS',
-            type: 'item',
-            icon: 'circle',
-            url: 'charts-and-maps/chartjs'
-          }
-        ]
-      },
-      {
-        id: 'google-maps',
-        title: 'Google Maps',
-        translate: 'MENU.CM.MAPS',
-        icon: 'map',
-        type: 'item',
-        url: 'charts-and-maps/google-maps'
-      }
-    ]
-  },
   // Others
   {
     id: 'others',
@@ -1164,16 +824,6 @@ export const menu: CoreMenu[] = [
         type: 'item',
         url: '#',
         disabled: true
-      },
-      {
-        id: 'documentation',
-        title: 'Documentation',
-        translate: 'MENU.OTHERS.DOCUMENTATION',
-        icon: 'file-text',
-        type: 'item',
-        url: 'https://pixinvent.com/demo/vuexy-angular-admin-dashboard-template/documentation',
-        externalUrl: true,
-        openInNewTab: true
       },
       {
         id: 'raise-support',

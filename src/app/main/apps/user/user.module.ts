@@ -13,9 +13,6 @@ import { CoreDirectivesModule } from '@core/directives/directives';
 import { CorePipesModule } from '@core/pipes/pipes.module';
 import { CoreSidebarModule } from '@core/components';
 
-import { InvoiceListService } from 'app/main/apps/invoice/invoice-list/invoice-list.service';
-import { InvoiceModule } from 'app/main/apps/invoice/invoice.module';
-
 import { UserEditComponent } from 'app/main/apps/user/user-edit/user-edit.component';
 import { UserEditService } from 'app/main/apps/user/user-edit/user-edit.service';
 
@@ -41,7 +38,6 @@ const routes: Routes = [
     component: UserViewComponent,
     resolve: {
       data: UserViewService,
-      InvoiceListService
     },
     data: { path: 'view/:id', animation: 'UserViewComponent' }
   },
@@ -76,7 +72,6 @@ const routes: Routes = [
     NgxDatatableModule,
     CorePipesModule,
     CoreDirectivesModule,
-    InvoiceModule,
     CoreSidebarModule
   ],
   providers: [UserListService, UserViewService, UserEditService]
