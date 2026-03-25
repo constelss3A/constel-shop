@@ -113,7 +113,7 @@ export class EcommerceDetailsComponent implements OnInit {
 
     // content header
     this.contentHeader = {
-      headerTitle: 'Product Details',
+      headerTitle: 'Detalhes do produto',
       actionButton: true,
       breadcrumb: {
         type: '',
@@ -129,12 +129,12 @@ export class EcommerceDetailsComponent implements OnInit {
             link: '/'
           },
           {
-            name: 'Shop',
+            name: 'Loja',
             isLink: true,
             link: '/'
           },
           {
-            name: 'Details',
+            name: 'Detalhamento',
             isLink: false
           }
         ]

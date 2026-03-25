@@ -35,7 +35,7 @@ export const snippetCodeBasic: snippetCode = {
           <img src="assets/images/avatars/12-small.png" alt="avatar" height="38" width="38" />
         </div>
         <div class="media-body ml-50">
-          <h6 class="mb-0">John Doe (Client)</h6>
+          <h6 class="mb-0">Augusto Cavalcante (Client)</h6>
           <span>CEO of Infibeam</span>
         </div>
       </div>
@@ -266,7 +266,7 @@ export const snippetCodeIcons: snippetCode = {
           <img src="assets/images/avatars/12-small.png" alt="avatar" height="38" width="38" />
         </div>
         <div class="media-body ml-50">
-          <h6 class="mb-0">John Doe (Client)</h6>
+          <h6 class="mb-0">Augusto Cavalcante (Client)</h6>
           <span>CEO of Infibeam</span>
         </div>
       </div>

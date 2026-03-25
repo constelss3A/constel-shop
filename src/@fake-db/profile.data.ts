@@ -226,7 +226,7 @@ export class ProfileFakeData {
             { img: 'assets/images/portrait/small/avatar-s-5.jpg', username: 'Carissa Dolle' },
             { img: 'assets/images/portrait/small/avatar-s-9.jpg', username: 'Kelle Herrick' },
             { img: 'assets/images/portrait/small/avatar-s-10.jpg', username: 'Len Bregantini' },
-            { img: 'assets/images/portrait/small/avatar-s-11.jpg', username: 'John Doe' }
+            { img: 'assets/images/portrait/small/avatar-s-11.jpg', username: 'Augusto Cavalcante' }
           ]
         },
         {

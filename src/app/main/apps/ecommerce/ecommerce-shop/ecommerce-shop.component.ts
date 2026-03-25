@@ -91,7 +91,7 @@ export class EcommerceShopComponent implements OnInit {
 
     // content header
     this.contentHeader = {
-      headerTitle: 'Shop',
+      headerTitle: 'Loja',
       actionButton: true,
       breadcrumb: {
         type: '',
@@ -107,7 +107,7 @@ export class EcommerceShopComponent implements OnInit {
             link: '/'
           },
           {
-            name: 'Shop',
+            name: 'Loja',
             isLink: false
           }
         ]

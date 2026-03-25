@@ -2,7 +2,7 @@ export class ChatFakeData {
   public static profileUser = {
     id: 11,
     avatar: 'assets/images/portrait/small/avatar-s-11.jpg',
-    fullName: 'John Doe',
+    fullName: 'Augusto Cavalcante',
     role: 'admin',
     about:
       'Dessert chocolate cake lemon drops jujubes. Biscuit cupcake ice cream bear claw brownie brownie marshmallow.',

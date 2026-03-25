@@ -53,7 +53,7 @@ export class AuthenticationService {
    */
   login(email: string, password: string) {
     return this._http
-      .post<any>(`${environment.apiUrl}/users/authenticate`, { email, password })
+      .post<any>(`${environment.api}/users/authenticate`, { email, password })
       .pipe(
         map(user => {
           // login successful if there's a jwt token in the response

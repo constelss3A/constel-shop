@@ -7,10 +7,51 @@ export const menu: CoreMenu[] = [
   {
     id: 'apps',
     type: 'section',
-    title: 'Apps & Pages',
+    title: 'Aplicativos & Páginas',
     translate: 'MENU.APPS.SECTION',
     icon: 'package',
     children: [
+      {
+        id: 'e-commerce',
+        title: 'eCommerce',
+        translate: 'MENU.APPS.ECOMMERCE.COLLAPSIBLE',
+        type: 'collapsible',
+        icon: 'shopping-cart',
+        children: [
+          {
+            id: 'loja',
+            title: 'Loja',
+            translate: 'MENU.APPS.ECOMMERCE.SHOP',
+            type: 'item',
+            icon: 'circle',
+            url: 'apps/e-commerce/shop'
+          },
+          {
+            id: 'details',
+            title: 'Details',
+            translate: 'MENU.APPS.ECOMMERCE.DETAIL',
+            type: 'item',
+            icon: 'circle',
+            url: 'apps/e-commerce/details'
+          },
+          {
+            id: 'wishList',
+            title: 'Wish List',
+            translate: 'MENU.APPS.ECOMMERCE.WISHLIST',
+            type: 'item',
+            icon: 'circle',
+            url: 'apps/e-commerce/wishlist'
+          },
+          {
+            id: 'checkout',
+            title: 'Checkout',
+            translate: 'MENU.APPS.ECOMMERCE.CHECKOUT',
+            type: 'item',
+            icon: 'circle',
+            url: 'apps/e-commerce/checkout'
+          }
+        ]
+      },
       {
         id: 'pages',
         title: 'Pages',
@@ -157,47 +198,6 @@ export const menu: CoreMenu[] = [
                 openInNewTab: true
               }
             ]
-          }
-        ]
-      },
-      {
-        id: 'e-commerce',
-        title: 'eCommerce',
-        translate: 'MENU.APPS.ECOMMERCE.COLLAPSIBLE',
-        type: 'collapsible',
-        icon: 'shopping-cart',
-        children: [
-          {
-            id: 'shop',
-            title: 'Shop',
-            translate: 'MENU.APPS.ECOMMERCE.SHOP',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/e-commerce/shop'
-          },
-          {
-            id: 'details',
-            title: 'Details',
-            translate: 'MENU.APPS.ECOMMERCE.DETAIL',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/e-commerce/details'
-          },
-          {
-            id: 'wishList',
-            title: 'Wish List',
-            translate: 'MENU.APPS.ECOMMERCE.WISHLIST',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/e-commerce/wishlist'
-          },
-          {
-            id: 'checkout',
-            title: 'Checkout',
-            translate: 'MENU.APPS.ECOMMERCE.CHECKOUT',
-            type: 'item',
-            icon: 'circle',
-            url: 'apps/e-commerce/checkout'
           }
         ]
       },

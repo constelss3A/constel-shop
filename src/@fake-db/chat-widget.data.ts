@@ -3,7 +3,7 @@ export class ChatWidgetFakeData {
     userProfile: {
       id: 11,
       avatar: 'assets/images/avatars/8.png',
-      fullName: 'John Doe',
+      fullName: 'Augusto Cavalcante',
       role: 'admin',
       about:
         'Dessert chocolate cake lemon drops jujubes. Biscuit cupcake ice cream bear claw brownie brownie marshmallow.',

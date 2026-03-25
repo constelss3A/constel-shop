@@ -1,7 +1,7 @@
 <!-- Ecommerce Item -->
-<div class="item-img text-center">
+<div class="item-container">
   <a [routerLink]="'/apps/e-commerce/details/' + product.id">
-    <img class="img-fluid card-img-top" [src]="product.image" alt="img-placeholder" />
+    <img class="img-fluid item-image card-img-top" [src]="product.image" alt="img-placeholder" />
   </a>
 </div>
 <div class="card-body">
@@ -16,7 +16,7 @@
       </div>
     </div>
     <div class="item-cost">
-      <h6 class="item-price">${{ product.price }}</h6>
+      <h6 class="item-price">R$ {{ product.price | number:'1.2-2' }}</h6>
     </div>
   </div>
   <h6 class="item-name">
@@ -56,7 +56,7 @@
     rippleEffect
   >
     <i class="fa mr-25" [ngClass]="product.isInWishlist === true ? 'fa-heart text-danger' : 'fa-heart-o'"></i>
-    <span>Wishlist</span>
+    <span>Lista de desejos</span>
   </a>
   <a
     *ngIf="product.isInCart !== true"
@@ -66,7 +66,7 @@
     rippleEffect
   >
     <i data-feather="shopping-cart" class="mr-25"></i>
-    <span class="add-to-cart">Add to cart</span>
+    <span class="add-to-cart">Adicionar</span>
   </a>
   <a
     *ngIf="product.isInCart === true"
@@ -75,7 +75,7 @@
     rippleEffect
   >
     <i data-feather="shopping-cart" class="mr-25"></i>
-    <span class="add-to-cart">View in cart</span>
+    <span class="add-to-cart">Visualizar</span>
   </a>
 </div>
 <!--/ Ecommerce Item -->

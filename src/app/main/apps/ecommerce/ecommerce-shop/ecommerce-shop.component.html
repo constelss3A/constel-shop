@@ -32,7 +32,7 @@
                 >
                   <span class="navbar-toggler-icon d-block d-lg-none"><i data-feather="menu"></i></span>
                 </button>
-                <div class="search-results">{{ (products | filter: searchText:'name').length }} results found</div>
+                <div class="search-results">{{ (products | filter: searchText:'name').length }} produtos encontrados</div>
               </div>
               <div class="view-options d-flex">
                 <div class="btn-group dropdown-sort" ngbDropdown>
@@ -45,12 +45,12 @@
                     aria-expanded="false"
                     rippleEffect
                   >
-                    <span class="active-sorting">Featured</span>
+                    <span class="active-sorting">Destaque</span>
                   </button>
                   <div ngbDropdownMenu>
-                    <a ngbDropdownItem href="javascript:void(0);" (click)="sortProduct('featured')">Featured</a>
-                    <a ngbDropdownItem href="javascript:void(0);" (click)="sortProduct('price-asc')">Lowest</a>
-                    <a ngbDropdownItem href="javascript:void(0);" (click)="sortProduct('price-desc')">Highest</a>
+                    <a ngbDropdownItem href="javascript:void(0);" (click)="sortProduct('featured')">Destaque</a>
+                    <a ngbDropdownItem href="javascript:void(0);" (click)="sortProduct('price-asc')">Menor preço</a>
+                    <a ngbDropdownItem href="javascript:void(0);" (click)="sortProduct('price-desc')">Maior preço</a>
                   </div>
                 </div>
                 <div class="btn-group btn-group-toggle" data-toggle="buttons">

@@ -5,7 +5,9 @@
 export const environment = {
   production: false,
   hmr: false,
-  apiUrl: 'http://localhost:4000'
+  api: 'https://sirius.constel.builders/api/',
+  apr: 'https://sirius-r.constel.builders/api/',
+  aps: 'https://sirius-s.constel.builders/api/',
 };
 
 /*

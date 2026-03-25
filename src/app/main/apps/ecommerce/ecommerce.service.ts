@@ -1,15 +1,18 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
-
 import { BehaviorSubject, Observable } from 'rxjs';
+
+import { EComProduct } from './modelo/product';
+import { ApiService } from 'app/modulos/api.service';
+import { Cardapio } from './modelo/cardapio';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EcommerceService implements Resolve<any> {
   // Public
-  public productList: Array<any>;
+  public productList: Array<EComProduct>;
   public wishlist: Array<any>;
   public cartList: Array<any>;
   public selectedProduct;
@@ -42,7 +45,10 @@ export class EcommerceService implements Resolve<any> {
    *
    * @param {HttpClient} _httpClient
    */
-  constructor(private _httpClient: HttpClient) {
+  constructor(
+    private _httpClient: HttpClient,
+    private apiService: ApiService,
+  ) {
     this.onProductListChange = new BehaviorSubject({});
     this.onRelatedProductsChange = new BehaviorSubject({});
     this.onWishlistChange = new BehaviorSubject({});
@@ -70,13 +76,38 @@ export class EcommerceService implements Resolve<any> {
   /**
    * Get Products
    */
-  getProducts(): Promise<any[]> {
+  getProducts(): Promise<EComProduct[]> {
     return new Promise((resolve, reject) => {
-      this._httpClient.get('api/ecommerce-products').subscribe((response: any) => {
-        this.productList = response;
+      this.apiService.encontra<Cardapio>('aps://integracao/cardapio/menu/0d1542e1-71fd-40f9-b1f7-ae00ab08626c/fe5b422e-bfb2-4328-83d4-7876020acef9', '').subscribe((cardapio: Cardapio) => {
+        console.log(cardapio);
+        const products: EComProduct[] = [];
+        cardapio.categorias.forEach(categoria => {
+          categoria.itens.forEach(item => {
+            if (!item.imagem) {
+              return;
+            }
+            products.push({
+              id: item.id,
+              name: item.nome,
+              slug: 'memo',
+              brand: 'Geral',
+              price: item.valor,
+              image: item.imagem,
+              hasFreeShipping: true,
+              rating: 5,
+              description: item.descricao,
+            });
+          });
+        })
+        this.productList = products;
         this.sortProduct('featured'); // Default shorting
         resolve(this.productList);
       }, reject);
+      // this._httpClient.get('api/ecommerce-products').subscribe((response: any) => {
+      //   this.productList = response;
+      //   this.sortProduct('featured'); // Default shorting
+      //   resolve(this.productList);
+      // }, reject);
     });
   }
 

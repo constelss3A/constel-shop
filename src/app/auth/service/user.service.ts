@@ -16,13 +16,13 @@ export class UserService {
    * Get all users
    */
   getAll() {
-    return this._http.get<User[]>(`${environment.apiUrl}/users`);
+    return this._http.get<User[]>(`${environment.api}/users`);
   }
 
   /**
    * Get user by id
    */
   getById(id: number) {
-    return this._http.get<User>(`${environment.apiUrl}/users/${id}`);
+    return this._http.get<User>(`${environment.api}/users/${id}`);
   }
 }

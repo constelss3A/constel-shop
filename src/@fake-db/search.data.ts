@@ -7,9 +7,9 @@ export class SearchFakeData {
       data: [
         {
           id: 10,
-          target: 'shop',
+          target: 'Loja',
           isBookmarked: false,
-          title: 'Shop Ecommerce',
+          title: 'Loja Ecommerce',
           icon: 'shopping-cart',
           link: '/apps/e-commerce/shop'
         },
