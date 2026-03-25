@@ -253,12 +253,13 @@ $search-bar-height: 48px;
 
     .item-image {
       flex: 1 1 120px;
-      max-width: 150px;
+      height: 170px;
+      // max-width: 150px;
       display: flex;
       justify-content: center;
       align-items: center;
-      opacity: 0.8;
-      transition: 0.3s;
+      // opacity: 0.8;
+      // transition: 0.3s;
     }
 
     .item-image img {

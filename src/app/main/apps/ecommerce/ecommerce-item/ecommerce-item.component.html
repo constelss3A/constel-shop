@@ -32,9 +32,9 @@
 <div class="item-options text-center">
   <div class="item-wrapper">
     <div class="item-cost">
-      <h4 class="item-price">${{ product.price }}</h4>
+      <h4 class="item-price">R$ {{ product.price | number:'1.2-2' }}</h4>
       <p class="card-text shipping" *ngIf="product.hasFreeShipping">
-        <span class="badge badge-pill badge-light-success">Free Shipping</span>
+        <span class="badge badge-pill badge-light-success">Entrega Grátis</span>
       </p>
     </div>
   </div>
@@ -65,7 +65,7 @@
     (click)="addToCart(product)"
     rippleEffect
   >
-    <i data-feather="shopping-cart" class="mr-25"></i>
+    <i data-feather="shopping-bag" class="mr-25"></i>
     <span class="add-to-cart">Adicionar</span>
   </a>
   <a
@@ -74,8 +74,8 @@
     class="btn btn-primary btn-cart"
     rippleEffect
   >
-    <i data-feather="shopping-cart" class="mr-25"></i>
-    <span class="add-to-cart">Visualizar</span>
+    <i data-feather="shopping-bag" class="mr-25"></i>
+    <span class="add-to-cart">Verificar</span>
   </a>
 </div>
 <!--/ Ecommerce Item -->

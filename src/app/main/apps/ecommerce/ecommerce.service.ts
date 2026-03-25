@@ -143,12 +143,15 @@ export class EcommerceService implements Resolve<any> {
    */
   getSelectedProduct(): Promise<any[]> {
     return new Promise((resolve, reject) => {
-      this._httpClient.get('api/ecommerce-products?id=' + this.idHandel).subscribe((response: any) => {
-        this.selectedProduct = response;
-        this.onSelectedProductChange.next(this.selectedProduct);
-        resolve(this.selectedProduct);
-      }, reject);
+      const product = this.productList?.filter(product => product.id === this.idHandel);
+      this.selectedProduct = product;
+      this.onSelectedProductChange.next(product);
+      resolve(this.selectedProduct);
     });
+  }
+
+  getProduct(): EComProduct {
+    return this.productList.find(product => product.id === this.idHandel);
   }
 
   /**

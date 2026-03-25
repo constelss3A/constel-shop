@@ -10,7 +10,7 @@ export class SearchFakeData {
           target: 'Loja',
           isBookmarked: false,
           title: 'Loja Ecommerce',
-          icon: 'shopping-cart',
+          icon: 'shopping-bag',
           link: '/apps/e-commerce/shop'
         },
         {

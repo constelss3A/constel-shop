@@ -93,9 +93,11 @@ export class EcommerceDetailsComponent implements OnInit {
    */
   ngOnInit(): void {
     // Subscribe to Selected Product change
-    this._ecommerceService.onSelectedProductChange.subscribe(res => {
-      this.product = res[0];
-    });
+    // this._ecommerceService.onSelectedProductChange.subscribe(res => {
+    //   this.product = res;
+    // });
+
+    this.product = this._ecommerceService.getProduct();
 
     // Subscribe to Wishlist change
     this._ecommerceService.onWishlistChange.subscribe(res => (this.wishlist = res));
