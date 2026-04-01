@@ -1,7 +1,7 @@
 <li ngbDropdown class="nav-item dropdown-cart mr-25">
   <a class="nav-link" tabindex="0" ngbDropdownToggle id="navbarCartDropdown"
     ><span [data-feather]="'shopping-bag'" [class]="'ficon'"></span
-    ><span class="badge badge-pill badge-primary badge-up cart-item-count">{{ cartListLength }}</span></a
+    ><span class="badge badge-pill badge-primary badge-up cart-item-count">{{ sacola.quantidade || 0 }}</span></a
   >
   <ul
     ngbDropdownMenu
@@ -11,50 +11,54 @@
     <!-- Cart header -->
     <li class="dropdown-menu-header">
       <div class="dropdown-header d-flex">
-        <h4 class="notification-title mb-0 mr-auto">Minha Sacola</h4>1
-        <div class="badge badge-pill badge-light-primary">{{ cartListLength }} Items</div>
+        <h4 class="notification-title mb-0 mr-auto">Minha Sacola</h4>
+        <div class="badge badge-pill badge-light-primary">{{ sacola.quantidade }} {{ sacola.quantidade === 1 ? 'Item' : 'Itens' }}</div>
       </div>
     </li>
     <!--/ Cart header -->
-
     <!-- Cart content -->
     <li class="scrollable-container media-list" [perfectScrollbar]>
-      <ng-container *ngIf="products.length">
-        <ng-container *ngFor="let product of products">
-          <div class="media align-items-center" *ngIf="product?.isInCart === true">
-            <img class="d-block rounded mr-1" [src]="product.image" alt="donuts" width="62" />
+      <ng-container *ngIf="!sacola.quantidade">
+        <div class="media align-items-center">
+          <h6 class="text-center">A sacola está vazia, temos deliciosos itens esperando por você</h6>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="sacola.quantidade">
+        <ng-container *ngFor="let linha of sacola.linhas">
+          <div class="media align-items-center">
+            <img class="d-block rounded mr-1" [src]="linha.item.imagem" alt="item" width="62" />
             <div class="media-body">
-              <button class="btn p-0" (click)="removeFromCart(product)">
+              <button class="btn p-0" (click)="exclui(linha)">
                 <i class="ficon cart-item-remove" data-feather="x"></i>
               </button>
               <div class="media-heading">
                 <h6 class="cart-item-title">
-                  <a class="text-body" [routerLink]="'/apps/e-commerce/ecommerce-details/' + product.id">{{
-                    product.name
+                  <a class="text-body" [routerLink]="'/apps/e-commerce/ecommerce-details/' + linha.item.id">{{
+                    linha.item.nome
                   }}</a>
                 </h6>
-                <small class="cart-item-by">{{ product.brand }}</small>
+                <!-- <small class="cart-item-by">{{ linha.marca }}</small> -->
               </div>
               <div class="cart-item-qty">
                 <div class="input-group touchspin-cart">
-                  <core-touchspin [numberValue]="1" [stepValue]="1" [minValue]="1" [maxValue]="10"></core-touchspin>
+                  <core-touchspin [numberValue]="linha.quantidade" [stepValue]="1" [minValue]="-1" [maxValue]="10" (onChange)="quantidadeChange(linha, $event)">
+                  </core-touchspin>
                 </div>
               </div>
-              <h5 class="cart-item-price">${{ product.price }}</h5>
+              <h5 class="cart-item-price">{{ linha.total | currency: 'BRL' }}</h5>
             </div>
           </div>
         </ng-container>
       </ng-container>
     </li>
     <!--/ Cart content -->
-
     <!-- Cart footer -->
     <li class="dropdown-menu-footer">
       <div class="d-flex justify-content-between mb-1">
         <h6 class="font-weight-bolder mb-0">Total:</h6>
-        <h6 class="text-primary font-weight-bolder mb-0">$10,999.00</h6>
+        <h6 class="text-primary font-weight-bolder mb-0">{{ sacola.total | currency: 'BRL' }}</h6>
       </div>
-      <a class="btn btn-primary btn-block" routerLink="/apps/e-commerce/checkout">Checkout</a>
+      <a class="btn btn-primary btn-block" routerLink="/apps/e-commerce/checkout" *ngIf="sacola.total">Finalizar</a>
     </li>
     <!--/ Cart footer -->
   </ul>
