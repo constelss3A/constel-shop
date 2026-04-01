@@ -2,7 +2,7 @@ import { CoreMenu } from '@core/types';
 
 //? DOC: http://localhost:7777/demo/vuexy-angular-admin-dashboard-template/documentation/guide/development/navigation-menus.html#interface
 
-export const menu: CoreMenu[] = [
+const menux: CoreMenu[] = [
   // Apps & Pages
   {
     id: 'apps',
@@ -54,7 +54,7 @@ export const menu: CoreMenu[] = [
       },
       {
         id: 'pages',
-        title: 'Pages',
+        title: 'Páginas',
         translate: 'MENU.PAGES.SECTION',
         type: 'collapsible',
         icon: 'file-text',
@@ -838,3 +838,5 @@ export const menu: CoreMenu[] = [
     ]
   }
 ];
+
+export const menu = menux.filter(menu => menu.id === 'apps');

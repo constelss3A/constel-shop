@@ -26,8 +26,8 @@ const users: User[] = [
     id: 1,
     email: 'admin@demo.com',
     password: 'admin',
-    firstName: 'John',
-    lastName: 'Doe',
+    firstName: 'Augusto',
+    lastName: 'Cavalcante',
     avatar: 'avatar-s-11.jpg',
     role: Role.Admin
   },

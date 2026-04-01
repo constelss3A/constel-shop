@@ -44,11 +44,7 @@ export class ApiService {
       return environment.apr + resource.split('//')[1];
     }
     if (resource.startsWith('aps://')) {
-      console.log('PARAMETRO', resource);
-      const url = environment.aps + resource.split('//')[1];
-      console.log('URL', url);
-      return url;
-      //return environment.aps + resource.split('//')[1];
+      return environment.aps + resource.split('//')[1];
     }
     if (resource.startsWith('/api/')) {
       return resource;
