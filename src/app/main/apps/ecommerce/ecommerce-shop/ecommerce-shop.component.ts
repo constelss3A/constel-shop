@@ -1,8 +1,11 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 
-import { CoreSidebarService } from '@core/components/core-sidebar/core-sidebar.service';
-
 import { EcommerceService } from 'app/main/apps/ecommerce/ecommerce.service';
+import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
+import { Estabelecimento } from 'app/modulos/administrativo/estabelecimento/estabelecimento';
+import { Localizador } from 'app/modulos/venda/localizador/localizador';
+import { Cardapio, CardapioItem } from '../modelo/cardapio';
+
 @Component({
   selector: 'app-ecommerce-shop',
   templateUrl: './ecommerce-shop.component.html',
@@ -16,31 +19,31 @@ export class EcommerceShopComponent implements OnInit {
   public shopSidebarToggle = false;
   public shopSidebarReset = false;
   public gridViewRef = true;
-  public products;
   public wishlist;
   public cartList;
   public page = 1;
   public pageSize = 9;
   public searchText = '';
 
+  public empresa: Empresa;
+  public estabelecimento: Estabelecimento;
+  public localizador: Localizador;
+  public cardapio: Cardapio;
+
+  public faixa: string;
+  public avatar: string;
+
   /**
    *
    * @param {CoreSidebarService} _coreSidebarService
    * @param {EcommerceService} _ecommerceService
    */
-  constructor(private _coreSidebarService: CoreSidebarService, private _ecommerceService: EcommerceService) {}
+  constructor(
+    private _ecommerceService: EcommerceService,
+  ) { }
 
   // Public Methods
   // -----------------------------------------------------------------------------------------------------
-
-  /**
-   * Toggle Sidebar
-   *
-   * @param name
-   */
-  toggleSidebar(name): void {
-    this._coreSidebarService.getSidebarRegistry(name).toggleOpen();
-  }
 
   /**
    * Update to List View
@@ -72,9 +75,24 @@ export class EcommerceShopComponent implements OnInit {
   ngOnInit(): void {
     // Subscribe to ProductList change
 
-    this._ecommerceService.onProductListChange.subscribe(res => {
-      this.products = res;
-      this.products.isInWishlist = false;
+    this._ecommerceService.onEmpresaChange.subscribe(empresa => {
+      this.empresa = empresa;
+      console.log('empresa atualizada', this.empresa);
+      this.faixa = empresa.empresaConfiguracao?.parametros?.visual?.cardapio?.faixa;
+      this.avatar = empresa.imagem;
+    });
+
+    this._ecommerceService.onEstabelecimentoChange.subscribe(estabelecimento => {
+      this.estabelecimento = estabelecimento;
+    });
+
+    this._ecommerceService.onLocalizadorChange.subscribe(localizador => {
+      this.localizador = localizador;
+      console.log('localizador atualizado', this.localizador);
+    });
+
+    this._ecommerceService.onCardapioChange.subscribe(cardapio => {
+      this.cardapio = cardapio;
     });
 
     // Subscribe to Wishlist change
@@ -82,12 +100,6 @@ export class EcommerceShopComponent implements OnInit {
 
     // Subscribe to Cartlist change
     this._ecommerceService.onCartListChange.subscribe(res => (this.cartList = res));
-
-    // update product is in Wishlist & is in CartList : Boolean
-    this.products.forEach(product => {
-      product.isInWishlist = this.wishlist.findIndex(p => p.productId === product.id) > -1;
-      product.isInCart = this.cartList.findIndex(p => p.productId === product.id) > -1;
-    });
 
     // content header
     this.contentHeader = {
@@ -113,5 +125,24 @@ export class EcommerceShopComponent implements OnInit {
         ]
       }
     };
+  }
+
+  formataValor(valor: number) {
+    valor ??= 0.00;
+    if ((valor % 1) === 0) {
+      return 'R$ ' + valor.toFixed(0).replace('.', ',');
+    }
+    return 'R$ ' + valor.toFixed(2).replace('.', ',');
+  }
+
+  irPara(id: string) {
+    const elemento = document.getElementById(id);
+    if (elemento) {
+      elemento.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  sacolaAdiciona(item: CardapioItem) {
+    this._ecommerceService.addToCart(item.id).then();
   }
 }

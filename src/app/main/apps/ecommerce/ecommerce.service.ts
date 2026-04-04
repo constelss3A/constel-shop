@@ -6,18 +6,29 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { EComProduct } from './modelo/product';
 import { ApiService } from 'app/modulos/api.service';
 import { Cardapio } from './modelo/cardapio';
+import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
+import { Estabelecimento } from 'app/modulos/administrativo/estabelecimento/estabelecimento';
+import { Sacola, SacolaLinha } from './modelo/sacola';
+import { Localizador } from 'app/modulos/venda/localizador/localizador';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EcommerceService implements Resolve<any> {
   // Public
-  public productList: Array<EComProduct>;
-  public wishlist: Array<any>;
-  public cartList: Array<any>;
-  public selectedProduct;
-  public relatedProducts;
+  sacola: Sacola;
+  cardapio: Cardapio;
+  productList: Array<EComProduct>;
+  wishlist: Array<any>;
+  cartList: Array<any>;
+  selectedProduct;
+  relatedProducts;
 
+  onEmpresaChange: BehaviorSubject<any>;
+  onEstabelecimentoChange: BehaviorSubject<any>;
+  onLocalizadorChange: BehaviorSubject<any>;
+  onCardapioChange: BehaviorSubject<any>;
+  onSacolaChange: BehaviorSubject<any>;
   public onProductListChange: BehaviorSubject<any>;
   public onRelatedProductsChange: BehaviorSubject<any>;
   public onWishlistChange: BehaviorSubject<any>;
@@ -26,6 +37,9 @@ export class EcommerceService implements Resolve<any> {
 
   // Private
   private idHandel;
+  private empresaId: string = '';
+  private estabelecimentoId: string = '';
+  private localizadorId: string = '';
 
   private sortRef = key => (a, b) => {
     const fieldA = a[key];
@@ -49,11 +63,18 @@ export class EcommerceService implements Resolve<any> {
     private _httpClient: HttpClient,
     private apiService: ApiService,
   ) {
+    this.sacola = new Sacola();
+    this.onEmpresaChange = new BehaviorSubject({});
+    this.onEstabelecimentoChange = new BehaviorSubject({});
+    this.onLocalizadorChange = new BehaviorSubject({});
+    this.onCardapioChange = new BehaviorSubject({});
+    this.onSacolaChange = new BehaviorSubject({});
     this.onProductListChange = new BehaviorSubject({});
     this.onRelatedProductsChange = new BehaviorSubject({});
     this.onWishlistChange = new BehaviorSubject({});
     this.onCartListChange = new BehaviorSubject({});
     this.onSelectedProductChange = new BehaviorSubject({});
+    this.sacola.inicia();
   }
 
   /**
@@ -65,27 +86,69 @@ export class EcommerceService implements Resolve<any> {
    */
   resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<any> | Promise<any> | any {
     this.idHandel = route.params.id;
-
+    this.empresaId = route.params.empresaid;
+    this.estabelecimentoId = route.params.estabelecimentoid;
+    this.localizadorId = route.params.localizadorid;
+    this.sacola = new Sacola();
+    this.onSacolaChange.next(this.sacola);
     return new Promise<void>((resolve, reject) => {
-      Promise.all([this.getProducts(), this.getWishlist(), this.getCartList(), this.getSelectedProduct()]).then(() => {
+      Promise.all([this.getEmpresa(), this.getEstabelecimento(), this.getLocalizador(), this.getCardapio(), this.getWishlist(), this.getCartList(), this.getSelectedProduct()]).then(() => {
         resolve();
       }, reject);
     });
   }
 
-  /**
-   * Get Products
-   */
-  getProducts(): Promise<EComProduct[]> {
+  getEmpresa(): Promise<{ ok: boolean }> {
     return new Promise((resolve, reject) => {
-      this.apiService.encontra<Cardapio>('aps://integracao/cardapio/menu/0d1542e1-71fd-40f9-b1f7-ae00ab08626c/fe5b422e-bfb2-4328-83d4-7876020acef9', '').subscribe((cardapio: Cardapio) => {
-        console.log(cardapio);
+      this.apiService.encontra<Empresa>(`aps://integracao/cardapio/empresa/${this.empresaId}`, '').subscribe((empresa: Empresa) => {
+        this.onEmpresaChange.next(empresa);
+        resolve({ ok: true });
+      }, reject);
+    });
+  }
+
+  getEstabelecimento(): Promise<{ ok: boolean }> {
+    return new Promise((resolve, reject) => {
+      this.apiService.encontra<Empresa>(`aps://integracao/cardapio/estabelecimento/${this.estabelecimentoId}`, '').subscribe((estabelecimento: Estabelecimento) => {
+        this.onEstabelecimentoChange.next(estabelecimento);
+        resolve({ ok: true });
+      }, reject);
+    });
+  }
+
+  getLocalizador(): Promise<{ ok: boolean }> {
+    if (!this.localizadorId) {
+      return Promise.resolve({ ok: false });
+    }
+    return new Promise((resolve, reject) => {
+      this.apiService.encontra<Localizador>(`aps://integracao/cardapio/localizador/${this.localizadorId}`, '').subscribe((localizador: Localizador) => {
+        this.onLocalizadorChange.next(localizador);
+        resolve({ ok: true });
+      }, reject);
+    });
+  }
+
+  getCardapio(): Promise<{ ok: boolean }> {
+    if (!(this.empresaId && this.estabelecimentoId) ) {
+      return Promise.resolve({ ok: false });
+    }
+    return new Promise((resolve, reject) => {
+      this.cardapio = {
+        categorias: [],
+      };
+      this.apiService.encontra<Cardapio>(`aps://integracao/cardapio/menu/${this.empresaId}/${this.estabelecimentoId}`, '').subscribe((cardapio: Cardapio) => {
         const products: EComProduct[] = [];
         cardapio.categorias.forEach(categoria => {
+          categoria.imagem ??= 'assets/images/ecommerce/categoria.png';
+          if (categoria.nome === 'Favoritos') {
+            categoria.nome = 'Destaques';
+            categoria.imagem = 'assets/images/ecommerce/destaque.png';
+          }
           categoria.itens.forEach(item => {
-            if (!item.imagem) {
-              return;
-            }
+            // if (['a', 'b', 'c', '1', '2', '3'].includes(item.id.substring(2, 2).toLowerCase())) {
+            //   item['valorOriginal'] = 3;
+            // }
+            item.imagem ??= 'assets/images/ecommerce/item.png';
             products.push({
               id: item.id,
               name: item.nome,
@@ -98,16 +161,13 @@ export class EcommerceService implements Resolve<any> {
               description: item.descricao,
             });
           });
-        })
+        });
+        this.cardapio = cardapio;
         this.productList = products;
-        this.sortProduct('featured'); // Default shorting
-        resolve(this.productList);
+        this.onCardapioChange.next(cardapio);
+        this.onProductListChange.next(this.productList);
+        resolve({ ok: true });
       }, reject);
-      // this._httpClient.get('api/ecommerce-products').subscribe((response: any) => {
-      //   this.productList = response;
-      //   this.sortProduct('featured'); // Default shorting
-      //   resolve(this.productList);
-      // }, reject);
     });
   }
 
@@ -131,7 +191,6 @@ export class EcommerceService implements Resolve<any> {
     return new Promise((resolve, reject) => {
       this._httpClient.get('api/ecommerce-userCart').subscribe((response: any) => {
         this.cartList = response;
-
         this.onCartListChange.next(this.cartList);
         resolve(this.cartList);
       }, reject);
@@ -226,13 +285,44 @@ export class EcommerceService implements Resolve<any> {
     });
   }
 
+  getLinha(_id: string) {
+    for (const linha of this.sacola.linhas) {
+      if (linha._id === _id) {
+        return linha;
+      }
+    }
+    console.error('Item not found');
+    return null;
+  }
+
+  getItem(id: string) {
+    for (const categoria of this.cardapio.categorias) {
+      for (const item of categoria.itens) {
+        if (item.id === id) {
+          return item;
+        }
+      }
+    }
+    console.error('Item not found');
+    return null;
+  }
+
   /**
    * Add In Cart
    *
    * @param id
    */
-  addToCart(id) {
+  addToCart(id: string): Promise<void> {
+    const item = this.getItem(id);
+    if (!item) {
+      return;
+    }
+    this.sacola.adiciona(item);
     return new Promise<void>((resolve, reject) => {
+      const product = this.productList.find(product => product.id === id);
+      if (product) {
+        product.isInCart = true;
+      }
       const maxValueId = Math.max(...this.cartList.map(cart => cart.id), 0) + 1;
       const cartRef = { id: maxValueId, productId: id, qty: 1 };
       var cartId: any = '';
@@ -241,6 +331,7 @@ export class EcommerceService implements Resolve<any> {
       if (maxValueId !== 1) {
         cartId = maxValueId;
       }
+      this.onSacolaChange.next(this.sacola);
       this._httpClient.post('api/ecommerce-userCart/' + cartId, { ...cartRef }).subscribe(response => {
         this.getCartList();
         resolve();
@@ -248,15 +339,27 @@ export class EcommerceService implements Resolve<any> {
     });
   }
 
+
+  sacolaLinhaQuantidade(linha: SacolaLinha, quantidade: number) {
+    const _linha = this.getLinha(linha._id);
+    if (!_linha) {
+      return;
+    }
+    _linha.quantidade = quantidade;
+    this.sacola.linhaAtualizaQuantidade(_linha, quantidade);
+    this.onSacolaChange.next(this.sacola);
+  }
+
   /**
    * Remove From Cart
    *
    * @param id
    */
-  removeFromCart(id) {
-    const indexRef = this.cartList.findIndex(cartListRef => cartListRef.productId === id); // Get the index ref
+  removeFromCart(linha: SacolaLinha) {
+    this.sacola.remove(linha);
+    const indexRef = this.cartList.findIndex(cartListRef => cartListRef.productId === linha.item.id); // Get the index ref
     const indexId = this.cartList[indexRef].id; // Get the product wishlist id from indexRef
-
+    this.onSacolaChange.next(this.sacola);
     return new Promise<void>((resolve, reject) => {
       this._httpClient.delete('api/ecommerce-userCart/' + indexId).subscribe((response: any) => {
         this.getCartList();

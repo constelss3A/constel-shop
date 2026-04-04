@@ -4,6 +4,11 @@ export class Localizador {
   nome: string;
   situacao: number;
   tipo: number;
+  modalidade: {
+    id: string;
+    codigo: string;
+    nome: string;
+  }
 }
 
 export enum LocalizadorSituacao {
