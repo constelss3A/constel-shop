@@ -18,7 +18,6 @@ import { EcommerceDetailsComponent } from 'app/main/apps/ecommerce/ecommerce-det
 import { EcommerceItemComponent } from 'app/main/apps/ecommerce/ecommerce-item/ecommerce-item.component';
 import { EcommerceShopComponent } from 'app/main/apps/ecommerce/ecommerce-shop/ecommerce-shop.component';
 import { EcommerceSidebarComponent } from 'app/main/apps/ecommerce/ecommerce-shop/sidebar/sidebar.component';
-import { EcommerceWishlistComponent } from 'app/main/apps/ecommerce/ecommerce-wishlist/ecommerce-wishlist.component';
 import { EcommerceCheckoutComponent } from 'app/main/apps/ecommerce/ecommerce-checkout/ecommerce-checkout.component';
 import { EcommerceCheckoutItemComponent } from 'app/main/apps/ecommerce/ecommerce-checkout/ecommerce-checkout-item/ecommerce-checkout-item.component';
 
@@ -30,7 +29,7 @@ const DEFAULT_SWIPER_CONFIG: SwiperConfigInterface = {
 // routing
 const routes: Routes = [
   {
-    path: 'shop',
+    path: 'shop/:empresaid/:estabelecimentoid/:localizadorid',
     component: EcommerceShopComponent,
     resolve: {
       ecommerce: EcommerceService
@@ -44,14 +43,6 @@ const routes: Routes = [
       ecommerce: EcommerceService
     },
     data: { animation: 'EcommerceDetailsComponent' }
-  },
-  {
-    path: 'wishlist',
-    component: EcommerceWishlistComponent,
-    resolve: {
-      ecommerce: EcommerceService
-    },
-    data: { animation: 'EcommerceWishlistComponent' }
   },
   {
     path: 'checkout',
@@ -73,7 +64,6 @@ const routes: Routes = [
     EcommerceShopComponent,
     EcommerceSidebarComponent,
     EcommerceDetailsComponent,
-    EcommerceWishlistComponent,
     EcommerceCheckoutComponent,
     EcommerceItemComponent,
     EcommerceCheckoutItemComponent
@@ -88,12 +78,12 @@ const routes: Routes = [
     CoreSidebarModule,
     CoreCommonModule,
     NgbModule,
-    NouisliderModule
+    NouisliderModule,
   ],
   providers: [
     {
       provide: SWIPER_CONFIG,
-      useValue: DEFAULT_SWIPER_CONFIG
+      useValue: DEFAULT_SWIPER_CONFIG,
     }
   ]
 })

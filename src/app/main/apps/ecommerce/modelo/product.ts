@@ -8,4 +8,5 @@ export type EComProduct = {
   hasFreeShipping?: boolean;
   rating: number;
   description?: string;
+  isInCart?: boolean;
 };

@@ -1,5 +1,6 @@
 export type CardapioItem = {
   id: string;
+  codigo: string;
   nome: string;
   descricao: string;
   fracionamento: boolean;
@@ -8,7 +9,8 @@ export type CardapioItem = {
 }
 
 export type CardapioCategoria = {
-  id: number;
+  id: string;
+  codigo: string;
   nome: string;
   imagem?: string;
   itens: CardapioItem[];

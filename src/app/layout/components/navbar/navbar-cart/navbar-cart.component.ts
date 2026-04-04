@@ -13,7 +13,7 @@ import { Sacola, SacolaLinha } from 'app/main/apps/ecommerce/modelo/sacola';
 export class NavbarCartComponent implements OnInit {
   private _unsubscribeAll: Subject<any>;
 
-  sacola = new Sacola();
+  sacola: Sacola;
 
   constructor(public _ecommerceService: EcommerceService) {
     this._unsubscribeAll = new Subject();
@@ -22,7 +22,7 @@ export class NavbarCartComponent implements OnInit {
   ngOnInit(): void {
     this._ecommerceService.onSacolaChange.pipe(takeUntil(this._unsubscribeAll)).subscribe(sacola => {
       this.sacola = sacola;
-      console.log('sacola atualizada', this.sacola);
+      console.log('sacola atualizada x2', this.sacola);
     });
 
   }
