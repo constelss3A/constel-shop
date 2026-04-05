@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { CoreConfigService } from '@core/services/config.service';
+import { aplicativo } from 'app/app.version';
 
 @Component({
   selector: 'footer',
@@ -12,6 +13,7 @@ import { CoreConfigService } from '@core/services/config.service';
 export class FooterComponent implements OnInit, OnDestroy {
   public coreConfig: any;
   public year: number = new Date().getFullYear();
+  public version = aplicativo.versao;
 
   // Private
   private _unsubscribeAll: Subject<any>;

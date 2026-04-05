@@ -24,10 +24,10 @@
       </li>
     </ul>
     <!--/ Menu Toggler -->
-
     <!-- Bookmark -->
-    <app-navbar-bookmark></app-navbar-bookmark>
+    <!-- <app-navbar-bookmark></app-navbar-bookmark> -->
     <!--/ Bookmark -->
+    <app-navbar-company></app-navbar-company>
   </div>
   <ul class="nav navbar-nav align-items-center ml-auto">
     <!-- Language selection -->
@@ -44,14 +44,6 @@
     </li> -->
     <!--/ Language selection -->
 
-    <!-- Toggle skin -->
-    <li class="nav-item d-none d-lg-block">
-      <a class="nav-link nav-link-style btn" (click)="toggleDarkSkin()">
-        <span [ngClass]="currentSkin === 'dark' ? 'icon-sun' : 'icon-moon'" class="ficon font-medium-5 feather"></span>
-      </a>
-    </li>
-    <!--/ Toggle skin -->
-
     <!-- Search -->
     <!-- <app-navbar-search></app-navbar-search> -->
     <!--/ Search -->
@@ -59,6 +51,14 @@
     <!-- Cart -->
     <app-navbar-cart></app-navbar-cart>
     <!--/ Cart -->
+
+    <!-- Toggle skin -->
+    <!-- <li class="nav-item d-none d-lg-block">
+      <a class="nav-link nav-link-style btn" (click)="toggleDarkSkin()">
+        <span [ngClass]="currentSkin === 'dark' ? 'icon-sun' : 'icon-moon'" class="ficon font-medium-5 feather"></span>
+      </a>
+    </li> -->
+    <!--/ Toggle skin -->
 
     <!-- Notification -->
     <!-- <app-navbar-notification></app-navbar-notification> -->
@@ -76,18 +76,23 @@
       >
         <ng-container *ngIf="this.currentUser">
           <div class="user-nav d-sm-flex d-none">
-            <span class="user-name font-weight-bolder"
-              >{{ this.currentUser.firstName }} {{ this.currentUser.lastName }}</span
-            ><span class="user-status">{{ this.currentUser.role }}</span>
+            <span class="user-name font-weight-bolder">
+              {{ this.currentUser.firstName }} {{ this.currentUser.lastName }}
+            </span>
+            <span class="user-status">
+              VIP
+            </span>
           </div>
-          <span class="avatar"
-            ><img
+          <span class="avatar">
+            <img
               class="round"
-              src="assets/images/portrait/small/{{ this.currentUser.avatar }}"
+              src="https://s3.amazonaws.com/atlas.constel.cloud/files/53e9baa1-9e7b-4b47-8e7b-8f48d5130df0.png"
               alt="avatar"
               height="40"
-              width="40" /><span class="avatar-status-online"></span
-          ></span>
+              width="40"
+            />
+            <span class="avatar-status-online"></span>
+          </span>
         </ng-container>
       </a>
       <div ngbDropdownMenu aria-labelledby="navbarUserDropdown" class="dropdown-menu dropdown-menu-right">
