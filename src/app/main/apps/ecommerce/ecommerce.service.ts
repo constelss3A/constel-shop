@@ -10,12 +10,19 @@ import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
 import { Estabelecimento } from 'app/modulos/administrativo/estabelecimento/estabelecimento';
 import { Sacola, SacolaLinha } from './modelo/sacola';
 import { Localizador } from 'app/modulos/venda/localizador/localizador';
+import { Pedido, PedidoModelo, PedidoTipo } from 'app/modulos/integracao/pedido/pedido';
+import { PedidoItem } from 'app/modulos/integracao/pedido/pedido-item';
+import { Item } from 'app/modulos/recurso/item/item';
+import { ToastService } from 'app/main/components/toasts/toasts.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EcommerceService implements Resolve<any> {
   // Public
+  empresa: Empresa;
+  estabelecimento: Estabelecimento;
+  localizador: Localizador;
   sacola: Sacola;
   cardapio: Cardapio;
   productList: Array<EComProduct>;
@@ -101,6 +108,7 @@ export class EcommerceService implements Resolve<any> {
   getEmpresa(): Promise<{ ok: boolean }> {
     return new Promise((resolve, reject) => {
       this.apiService.encontra<Empresa>(`aps://integracao/cardapio/empresa/${this.empresaId}`, '').subscribe((empresa: Empresa) => {
+        this.empresa = empresa;
         this.onEmpresaChange.next(empresa);
         resolve({ ok: true });
       }, reject);
@@ -110,6 +118,7 @@ export class EcommerceService implements Resolve<any> {
   getEstabelecimento(): Promise<{ ok: boolean }> {
     return new Promise((resolve, reject) => {
       this.apiService.encontra<Empresa>(`aps://integracao/cardapio/estabelecimento/${this.estabelecimentoId}`, '').subscribe((estabelecimento: Estabelecimento) => {
+        this.estabelecimento = estabelecimento;
         this.onEstabelecimentoChange.next(estabelecimento);
         resolve({ ok: true });
       }, reject);
@@ -118,10 +127,12 @@ export class EcommerceService implements Resolve<any> {
 
   getLocalizador(): Promise<{ ok: boolean }> {
     if (!this.localizadorId) {
+      this.localizador = null;
       return Promise.resolve({ ok: false });
     }
     return new Promise((resolve, reject) => {
       this.apiService.encontra<Localizador>(`aps://integracao/cardapio/localizador/${this.localizadorId}`, '').subscribe((localizador: Localizador) => {
+        this.localizador = localizador;
         this.onLocalizadorChange.next(localizador);
         resolve({ ok: true });
       }, reject);
@@ -129,7 +140,7 @@ export class EcommerceService implements Resolve<any> {
   }
 
   getCardapio(): Promise<{ ok: boolean }> {
-    if (!(this.empresaId && this.estabelecimentoId) ) {
+    if (!(this.empresaId && this.estabelecimentoId)) {
       return Promise.resolve({ ok: false });
     }
     return new Promise((resolve, reject) => {
@@ -365,6 +376,50 @@ export class EcommerceService implements Resolve<any> {
         this.getCartList();
         resolve();
       }, reject);
+    });
+  }
+
+  confirma() {
+    const pedido = new Pedido();
+    pedido.tipo = PedidoTipo.Autoatendimento;
+    pedido.empresa = this.empresa;
+    pedido.estabelecimento = this.estabelecimento;
+    if (this.localizador) {
+      pedido.localizador = this.localizador;
+    }
+    pedido.modelo = PedidoModelo.Constel;
+    pedido.pedidoItens = [];
+    var sequencial = 0;
+    this.sacola.linhas.forEach(linha => {
+      const pedidoItem = new PedidoItem();
+      pedidoItem.item = new Item();
+      pedidoItem.sequencial = ++sequencial;
+      pedidoItem.item.id = linha.item.id;
+      pedidoItem.item.nome = linha.item.id;
+      pedidoItem.itemIdentificador = linha.item.id;
+      pedidoItem.itemNome = linha.item.nome;
+      pedidoItem.valor = linha.valor;
+      pedidoItem.quantidade = linha.quantidade;
+      pedidoItem.medida = 'UN';
+      pedidoItem.subtotal = linha.total;
+      pedidoItem.opcionais = 0.00;
+      pedidoItem.total = linha.total;
+      pedido.pedidoItens.push(pedidoItem);
+    });
+    pedido.subtotal = this.sacola.total;
+    pedido.acrescimo = 0.00;
+    pedido.frete = 0.00;
+    pedido.abatimento = 0.00;
+    pedido.desconto = 0.00;
+    pedido.total = this.sacola.total;
+    this.apiService.grava<Pedido>(`aps://integracao/pedido/grava`, pedido, {
+      'empresa-id': this.empresa.id,
+      'empresa-nome': this.empresa.nome,
+      'estabelecimento-id': this.estabelecimento.id,
+      'estabelecimento-nome': this.estabelecimento.nome,
+    }).subscribe(() => {
+      this.sacola.inicia();
+      this.apiService.exibeSucesso('Pedido enviado');
     });
   }
 }

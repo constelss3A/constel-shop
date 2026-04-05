@@ -34,7 +34,15 @@ const routes: Routes = [
     resolve: {
       ecommerce: EcommerceService
     },
-    data: { animation: 'EcommerceShopComponent' }
+    data: { animation: 'EcommerceShopComponent' },
+  },
+  {
+    path: 'confirma/:empresaid/:estabelecimentoid/:localizadorid',
+    component: EcommerceCheckoutComponent,
+    resolve: {
+      ecommerce: EcommerceService
+    },
+    data: { animation: 'EcommerceCheckoutComponent' },
   },
   {
     path: 'details/:id',

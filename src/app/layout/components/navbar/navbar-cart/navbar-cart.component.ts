@@ -34,4 +34,8 @@ export class NavbarCartComponent implements OnInit {
   exclui(linha: SacolaLinha) {
     this._ecommerceService.removeFromCart(linha);
   }
+
+  confirma() {
+    this._ecommerceService.confirma();
+  }
 }

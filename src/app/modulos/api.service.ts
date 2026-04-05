@@ -370,17 +370,23 @@ export class ApiService {
       );
   }
 
-  grava<T>(resource: string, instancia: any, notifica: boolean = true): Observable<T> {
+  grava<T>(resource: string, instancia: any, opcoes?: Record<string, string>): Observable<T> {
     const url = this.getMapping(resource);
     this.logx(`POST: ${url}`);
     //this.logx('Objeto: ' + JSON.stringify(instancia));
-    const inicio = new Date();
+    //const inicio = new Date();
+    var headers = new HttpHeaders();
+    if (opcoes) {
+      for (const [chave, valor] of Object.entries(opcoes)) {
+        headers = headers.set(chave, valor);
+      }
+    }
     return this.http
-      .post<T>(`${url}`, instancia)
+      .post<T>(`${url}`, instancia, { headers })
       .pipe(
         tap(item => {
-          if (notifica)
-            this.xnotificaConclusao(`POST: ${url}`, `Ok - ${url} gravação concluída`, inicio, item);
+          // if (notifica)
+          //   this.xnotificaConclusao(`POST: ${url}`, `Ok - ${url} gravação concluída`, inicio, item);
         }),
         catchError(error => this.errorHandler('POST', `${url}`, error))
       );
