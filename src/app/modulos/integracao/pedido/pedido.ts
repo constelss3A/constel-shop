@@ -9,6 +9,7 @@ export class Pedido {
   empresa: Empresa;
   estabelecimento: Estabelecimento;
   localizador: Localizador;
+  referencia: string;
   modelo: PedidoModelo;
   pedidoItens: PedidoItem[];
   subtotal: number;

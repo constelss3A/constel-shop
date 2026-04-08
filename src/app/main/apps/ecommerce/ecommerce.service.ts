@@ -384,8 +384,11 @@ export class EcommerceService implements Resolve<any> {
     pedido.tipo = PedidoTipo.Autoatendimento;
     pedido.empresa = this.empresa;
     pedido.estabelecimento = this.estabelecimento;
+    pedido.referencia = '';
     if (this.localizador) {
+      pedido.tipo = this.localizador.tipo || PedidoTipo.Autoatendimento;
       pedido.localizador = this.localizador;
+      pedido.referencia = this.localizador.codigo;
     }
     pedido.modelo = PedidoModelo.Constel;
     pedido.pedidoItens = [];
