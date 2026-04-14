@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewEncapsulation } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { takeUntil, first } from 'rxjs/operators';
@@ -7,13 +7,15 @@ import { Subject } from 'rxjs';
 import { AuthenticationService } from 'app/auth/service';
 import { CoreConfigService } from '@core/services/config.service';
 
+declare const google: any;
+
 @Component({
   selector: 'app-auth-login-v2',
   templateUrl: './auth-login-v2.component.html',
   styleUrls: ['./auth-login-v2.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class AuthLoginV2Component implements OnInit {
+export class AuthLoginV2Component implements OnInit, AfterViewInit {
   //  Public
   public coreConfig: any;
   public loginForm: UntypedFormGroup;
@@ -95,6 +97,49 @@ export class AuthLoginV2Component implements OnInit {
         error => {
           this.error = error;
           this.loading = false;
+        }
+      );
+  }
+
+  ngAfterViewInit(): void {
+    this.initGoogleLogin();
+  }
+
+  private initGoogleLogin(): void {
+    const clientId = '610456046637-h2s9nfskkg8jad5t2jpi1lg5t3n0b509.apps.googleusercontent.com';
+    const init = () => {
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (res: any) => this.handleGoogleResponse(res),
+      });
+      google.accounts.id.renderButton(
+        document.getElementById('google-btn'),
+        { theme: 'outline', size: 'large', width: 300, locale: 'pt-BR', text: 'signin_with' }
+      );
+    };
+    if (typeof google !== 'undefined' && google.accounts) {
+      init();
+    } else {
+      const script = document.querySelector('script[src*="accounts.google.com"]');
+      if (script) {
+        script.addEventListener('load', init);
+      }
+    }
+  }
+
+  private handleGoogleResponse(response: any): void {
+    this.error = '';
+    this.loading = true;
+    this._authenticationService.loginWithGoogle(response.credential)
+      .pipe(first())
+      .subscribe(
+        data => {
+          this.loading = false;
+          this._router.navigate([this.returnUrl]);
+        },
+        error => {
+          this.loading = false;
+          this.error = error?.error?.error || 'Erro ao autenticar com Google';
         }
       );
   }

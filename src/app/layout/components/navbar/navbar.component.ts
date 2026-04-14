@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, HostBinding, HostListener, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, NgZone, ChangeDetectorRef, HostBinding, HostListener, ViewEncapsulation } from '@angular/core';
 import { MediaObserver } from '@angular/flex-layout';
 
 import * as _ from 'lodash';
@@ -15,6 +15,9 @@ import { User } from 'app/auth/models';
 
 import { coreConfig } from 'app/app-config';
 import { Router } from '@angular/router';
+import { first } from 'rxjs/operators';
+
+declare const google: any;
 
 @Component({
   selector: 'app-navbar',
@@ -22,7 +25,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./navbar.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class NavbarComponent implements OnInit, OnDestroy {
+export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   public horizontalMenu: boolean;
   public hiddenMenu: boolean;
 
@@ -76,6 +79,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
    */
   constructor(
     private _router: Router,
+    private _ngZone: NgZone,
+    private _cd: ChangeDetectorRef,
     private _authenticationService: AuthenticationService,
     private _coreConfigService: CoreConfigService,
     private _coreMediaService: CoreMediaService,
@@ -162,11 +167,83 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Inicializa o Google Sign-In
+   */
+  ngAfterViewInit(): void {
+    if (!this.currentUser) {
+      this.waitForGoogleAndInit();
+    }
+  }
+
+  private googleReady = false;
+
+  private waitForGoogleAndInit(attempts = 0): void {
+    if (attempts > 50) {
+      console.error('Google Sign-In: script não carregou');
+      return;
+    }
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+      google.accounts.id.initialize({
+        client_id: '610456046637-h2s9nfskkg8jad5t2jpi1lg5t3n0b509.apps.googleusercontent.com',
+        callback: (res: any) => this._ngZone.run(() => this.handleGoogleResponse(res)),
+      });
+      const btnEl = document.getElementById('google-btn');
+      if (btnEl) {
+        google.accounts.id.renderButton(btnEl, { size: 'large' });
+      }
+      this.googleReady = true;
+      console.log('Google Sign-In: inicializado');
+    } else {
+      setTimeout(() => this.waitForGoogleAndInit(attempts + 1), 200);
+    }
+  }
+
+  loginWithGoogle(): void {
+    if (this.googleReady && typeof google !== 'undefined') {
+      google.accounts.id.prompt((notification: any) => {
+        console.log('Google prompt:', notification);
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Fallback: clica no botão oculto do Google
+          const btnEl = document.getElementById('google-btn');
+          if (btnEl) {
+            btnEl.style.display = 'block';
+            btnEl.style.position = 'absolute';
+            btnEl.style.opacity = '0.01';
+            const iframe = btnEl.querySelector('iframe');
+            if (iframe) {
+              btnEl.style.display = 'none';
+            }
+          }
+        }
+      });
+    } else {
+      this.waitForGoogleAndInit();
+      setTimeout(() => this.loginWithGoogle(), 600);
+    }
+  }
+
+  private handleGoogleResponse(response: any): void {
+    console.log('Google credential recebido');
+    this._authenticationService.loginWithGoogle(response.credential)
+      .pipe(first())
+      .subscribe(
+        data => {
+          console.log('Login Google OK', data);
+          this.currentUser = this._authenticationService.currentUserValue;
+          this._cd.detectChanges();
+        },
+        error => {
+          console.error('Erro ao autenticar com Google', error);
+        }
+      );
+  }
+
+  /**
    * Logout method
    */
   logout() {
     this._authenticationService.logout();
-    this._router.navigate(['/pages/authentication/login-v2']);
+    this._router.navigate(['/']);
   }
 
   // Lifecycle Hooks

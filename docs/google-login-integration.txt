@@ -1,0 +1,345 @@
+================================================================
+INTEGRAÇÃO LOGIN COM GOOGLE — GUIA DE IMPLEMENTAÇÃO
+Stack: Angular (front) + Node/Express (back) + MongoDB Atlas (db)
+================================================================
+
+----------------------------------------------------------------
+1. VISÃO GERAL DO FLUXO
+----------------------------------------------------------------
+1. Usuário clica no botão "Sign in with Google" (Google Identity Services).
+2. Google devolve um "credential" (JWT assinado por accounts.google.com) ao front.
+3. Front envia POST /api/auth/google com { credential }.
+4. Backend valida o JWT via google-auth-library, faz upsert do usuário
+   no MongoDB Atlas e emite JWT próprio do sistema.
+5. Front armazena o usuário em localStorage (currentUser) e segue autenticado.
+
+
+----------------------------------------------------------------
+2. PRÉ-REQUISITOS — GOOGLE CLOUD CONSOLE
+----------------------------------------------------------------
+1. Acessar https://console.cloud.google.com/ → APIs & Services → Credentials.
+2. Criar OAuth 2.0 Client ID do tipo "Web application".
+3. Em "Authorized JavaScript origins", adicionar URLs do front
+   (ex.: http://localhost:4200, https://app.seudominio.com).
+4. Copiar o Client ID gerado.
+
+Client ID atualmente em uso:
+610456046637-h2s9nfskkg8jad5t2jpi1lg5t3n0b509.apps.googleusercontent.com
+
+Decidir: reusar esse Client ID (adicionando a nova origem) ou criar
+um novo projeto/credencial para o outro sistema.
+
+
+----------------------------------------------------------------
+3. FRONTEND (ANGULAR) — JÁ IMPLEMENTADO
+----------------------------------------------------------------
+
+3.1 Script GSI no index.html
+----------------------------
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+3.2 Container do botão no template de login
+--------------------------------------------
+<div class="divider my-2"><div class="divider-text">ou</div></div>
+<div class="d-flex justify-content-center">
+  <div id="google-btn"></div>
+</div>
+
+3.3 Inicialização e callback (componente de login)
+--------------------------------------------------
+declare const google: any;
+
+ngAfterViewInit(): void {
+  this.initGoogleLogin();
+}
+
+private initGoogleLogin(): void {
+  const clientId = environment.googleClientId;
+  const init = () => {
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: (res: any) => this.handleGoogleResponse(res),
+    });
+    google.accounts.id.renderButton(
+      document.getElementById('google-btn'),
+      { theme: 'outline', size: 'large', width: 300, locale: 'pt-BR', text: 'signin_with' }
+    );
+  };
+  if (typeof google !== 'undefined' && google.accounts) init();
+  else document.querySelector('script[src*="accounts.google.com"]')
+         ?.addEventListener('load', init);
+}
+
+private handleGoogleResponse(response: any): void {
+  this._authenticationService.loginWithGoogle(response.credential)
+    .pipe(first())
+    .subscribe(
+      () => this._router.navigate([this.returnUrl]),
+      err => this.error = err?.error?.error || 'Erro ao autenticar com Google'
+    );
+}
+
+3.4 Serviço de autenticação
+---------------------------
+loginWithGoogle(credential: string) {
+  return this._http.post<any>(`${environment.api}/auth/google`, { credential })
+    .pipe(map(data => {
+      if (data && data.token) {
+        const g = data.user || {};
+        const user = {
+          id: g.id || g._id || 0,  // Mongo devolve _id
+          email: g.email || '',
+          firstName: g.name?.split(' ')[0] || g.firstName || '',
+          lastName:  g.name?.split(' ').slice(1).join(' ') || g.lastName || '',
+          avatar: g.picture || g.avatar || 'avatar-s-11.jpg',
+          role: g.role || 'Client',
+          token: data.token
+        };
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        this.currentUserSubject.next(user);
+      }
+      return data;
+    }));
+}
+
+Obs.: se houver FakeBackendInterceptor, liberar a rota /auth/google
+para passar adiante (next.handle(request)).
+
+3.5 Environment
+---------------
+// src/environments/environment.ts
+export const environment = {
+  production: false,
+  api: 'http://localhost:5000/api',
+  googleClientId: '610456046637-h2s9nfskkg8jad5t2jpi1lg5t3n0b509.apps.googleusercontent.com'
+};
+
+
+----------------------------------------------------------------
+4. BACKEND — NODE + EXPRESS + MONGODB ATLAS
+----------------------------------------------------------------
+
+4.1 Dependências
+----------------
+npm i express cors google-auth-library jsonwebtoken mongoose dotenv
+
+4.2 .env
+--------
+PORT=5000
+GOOGLE_CLIENT_ID=610456046637-h2s9nfskkg8jad5t2jpi1lg5t3n0b509.apps.googleusercontent.com
+JWT_SECRET=troque-por-um-segredo-forte
+JWT_EXPIRES_IN=8h
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority
+
+No Atlas: criar usuário do DB, liberar IP (Network Access) e copiar
+a connection string em Database → Connect → Drivers (Node.js).
+Senha deve estar URL-encoded.
+
+4.3 Conexão — db.js
+-------------------
+const mongoose = require('mongoose');
+
+module.exports = async function connectDB() {
+  mongoose.set('strictQuery', true);
+  await mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 10000,
+  });
+  console.log('MongoDB Atlas conectado');
+};
+
+4.4 Model User — models/user.js
+-------------------------------
+const { Schema, model } = require('mongoose');
+
+const userSchema = new Schema({
+  googleSub:    { type: String, index: true, unique: true, sparse: true },
+  email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
+  firstName:    { type: String, default: '' },
+  lastName:     { type: String, default: '' },
+  avatar:       { type: String, default: '' },
+  role:         { type: String, enum: ['Admin', 'Client', 'User'], default: 'Client' },
+  provider:     { type: String, enum: ['local', 'google'], default: 'local' },
+  passwordHash: { type: String, default: null },
+}, { timestamps: true });
+
+module.exports = model('User', userSchema);
+
+4.5 Rota /api/auth/google — routes/auth.google.js
+-------------------------------------------------
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+const User = require('../models/user');
+
+const router = express.Router();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ error: 'credential é obrigatório' });
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload.email_verified) {
+      return res.status(401).json({ error: 'E-mail Google não verificado' });
+    }
+
+    const { sub, email, name, given_name, family_name, picture } = payload;
+
+    let user = await User.findOne({ $or: [{ googleSub: sub }, { email }] });
+
+    if (!user) {
+      user = await User.create({
+        googleSub: sub,
+        email,
+        firstName: given_name || name?.split(' ')[0] || '',
+        lastName:  family_name || name?.split(' ').slice(1).join(' ') || '',
+        avatar: picture || '',
+        role: 'Client',
+        provider: 'google',
+      });
+    } else if (!user.googleSub) {
+      user.googleSub = sub;
+      user.avatar = user.avatar || picture;
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      { sub: user._id.toString(), email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    return res.json({
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        picture: user.avatar,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error('Google auth error:', err);
+    return res.status(401).json({ error: 'Credencial Google inválida' });
+  }
+});
+
+module.exports = router;
+
+4.6 Bootstrap — server.js
+-------------------------
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const connectDB = require('./db');
+const authGoogle = require('./routes/auth.google');
+
+(async () => {
+  await connectDB();
+
+  const app = express();
+  app.use(cors({
+    origin: ['http://localhost:4200', 'https://app.seudominio.com'],
+    credentials: true,
+  }));
+  app.use(express.json());
+
+  app.use('/api/auth', authGoogle);
+
+  app.listen(process.env.PORT, () => console.log(`API on :${process.env.PORT}`));
+})();
+
+4.7 Middleware JWT — middleware/auth.js
+---------------------------------------
+const jwt = require('jsonwebtoken');
+
+module.exports = (req, res, next) => {
+  const h = req.headers.authorization || '';
+  if (!h.startsWith('Bearer ')) return res.status(401).json({ error: 'sem token' });
+  try {
+    req.user = jwt.verify(h.slice(7), process.env.JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ error: 'token inválido' });
+  }
+};
+
+Uso: app.get('/api/me', auth, handler);
+
+
+----------------------------------------------------------------
+5. CONTRATO DA API
+----------------------------------------------------------------
+
+Requisição:
+POST /api/auth/google
+Content-Type: application/json
+
+{ "credential": "<JWT retornado pelo Google>" }
+
+Resposta 200:
+{
+  "token": "<JWT interno>",
+  "user": {
+    "id": "665f...ObjectId",
+    "email": "fulano@gmail.com",
+    "firstName": "Fulano",
+    "lastName": "de Tal",
+    "name": "Fulano de Tal",
+    "picture": "https://lh3.googleusercontent.com/...",
+    "role": "Client"
+  }
+}
+
+Erros:
+- 400 → credential ausente.
+- 401 → e-mail não verificado ou credencial inválida.
+
+
+----------------------------------------------------------------
+6. SEGURANÇA — CHECKLIST
+----------------------------------------------------------------
+[ ] Validar sempre o credential no backend (nunca confiar no front).
+[ ] Conferir aud == GOOGLE_CLIENT_ID, iss em accounts.google.com,
+    exp válido (a lib já faz).
+[ ] Rejeitar email_verified = false.
+[ ] Rate-limit na rota /auth/google.
+[ ] HTTPS obrigatório em produção.
+[ ] JWT_SECRET forte e fora do repositório.
+[ ] CORS restrito às origens conhecidas.
+
+
+----------------------------------------------------------------
+7. CHECKLIST DE ENTREGA
+----------------------------------------------------------------
+[ ] Client ID autorizado nas Authorized JavaScript origins do Google Console.
+[ ] Cluster MongoDB Atlas criado (M0 serve para dev).
+[ ] Usuário de DB criado (Database Access).
+[ ] IP liberado em Network Access (dev: 0.0.0.0/0; prod: IP fixo).
+[ ] .env preenchido (MONGODB_URI, GOOGLE_CLIENT_ID, JWT_SECRET, JWT_EXPIRES_IN, PORT).
+[ ] Índices email (unique) e googleSub (unique sparse) criados pelo schema.
+[ ] CORS liberado para a URL do front Angular.
+[ ] Frontend apontando para environment.api correto.
+[ ] Teste ponta a ponta: clicar no botão Google → login → redirecionar
+    para rota autenticada.
+
+
+----------------------------------------------------------------
+8. PONTOS A ALINHAR ANTES DE CODAR
+----------------------------------------------------------------
+1. Client ID: reusar o atual ou criar um novo?
+2. Política de vínculo: se o email Google já existir como conta local,
+   vincular automaticamente? (Recomendado: sim, quando email_verified = true.)
+3. Role padrão ao criar usuário via Google (hoje: Client).
+4. Refresh token / TTL do JWT interno (hoje: 8h, sem refresh).
+5. Ambientes: cadastrar origens de dev, staging e produção no Google Console
+   e no CORS.

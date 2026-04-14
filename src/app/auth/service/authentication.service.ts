@@ -81,6 +81,41 @@ export class AuthenticationService {
       );
   }
 
+  loginWithGoogle(credential: string) {
+    return this._http
+      .post<any>(`http://localhost:5000/api/auth/google`, { credential })
+      .pipe(
+        map(data => {
+          console.log('Resposta Google login:', JSON.stringify(data));
+          if (data && data.token) {
+            const googleUser = data.user || {};
+            const user: User = {
+              id: googleUser.id || 0,
+              email: googleUser.email || '',
+              password: '',
+              firstName: googleUser.name?.split(' ')[0] || googleUser.firstName || '',
+              lastName: googleUser.name?.split(' ').slice(1).join(' ') || googleUser.lastName || '',
+              avatar: googleUser.picture || googleUser.avatar || 'avatar-s-11.jpg',
+              role: googleUser.role || Role.Client,
+              token: data.token
+            };
+            localStorage.setItem('currentUser', JSON.stringify(user));
+
+            setTimeout(() => {
+              this._toastrService.success(
+                'Login realizado com sucesso via Google!',
+                'Bem-vindo, ' + user.firstName + '!',
+                { toastClass: 'toast ngx-toastr', closeButton: true }
+              );
+            }, 2500);
+
+            this.currentUserSubject.next(user);
+          }
+          return data;
+        })
+      );
+  }
+
   /**
    * User logout
    *
