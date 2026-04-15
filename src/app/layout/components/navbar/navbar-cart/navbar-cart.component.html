@@ -60,7 +60,7 @@
         <h6 class="text-primary font-weight-bolder mb-0">{{ sacola.total | currency: 'BRL' }}</h6>
       </div>
       <a class="btn btn-primary btn-block" (click)="confirma()" *ngIf="sacola.total">Confirmar</a>
-      <!-- <a class="btn btn-primary btn-block" routerLink="/apps/e-commerce/checkout" *ngIf="sacola.total">Finalizar</a> -->
+      <a class="btn btn-primary btn-block" routerLink="/apps/e-commerce/checkout" *ngIf="sacola.total">Conferir e gravar</a>
     </li>
     <!--/ Cart footer -->
   </ul>
