@@ -93,11 +93,14 @@ export class EcommerceService implements Resolve<any> {
    */
   resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<any> | Promise<any> | any {
     this.idHandel = route.params.id;
-    this.empresaId = route.params.empresaid;
-    this.estabelecimentoId = route.params.estabelecimentoid;
-    this.localizadorId = route.params.localizadorid;
-    this.sacola = new Sacola();
-    this.onSacolaChange.next(this.sacola);
+    const hasContext = !!(route.params.empresaid || route.params.estabelecimentoid || route.params.localizadorid);
+    if (hasContext) {
+      this.empresaId = route.params.empresaid;
+      this.estabelecimentoId = route.params.estabelecimentoid;
+      this.localizadorId = route.params.localizadorid;
+      this.sacola = new Sacola();
+      this.onSacolaChange.next(this.sacola);
+    }
     return new Promise<void>((resolve, reject) => {
       Promise.all([this.getEmpresa(), this.getEstabelecimento(), this.getLocalizador(), this.getCardapio(), this.getWishlist(), this.getCartList(), this.getSelectedProduct()]).then(() => {
         resolve();
@@ -106,6 +109,10 @@ export class EcommerceService implements Resolve<any> {
   }
 
   getEmpresa(): Promise<{ ok: boolean }> {
+    if (!this.empresaId) {
+      this.empresa = null;
+      return Promise.resolve({ ok: false });
+    }
     return new Promise((resolve, reject) => {
       this.apiService.encontra<Empresa>(`aps://integracao/cardapio/empresa/${this.empresaId}`, '').subscribe((empresa: Empresa) => {
         this.empresa = empresa;
@@ -116,6 +123,10 @@ export class EcommerceService implements Resolve<any> {
   }
 
   getEstabelecimento(): Promise<{ ok: boolean }> {
+    if (!this.estabelecimentoId) {
+      this.estabelecimento = null;
+      return Promise.resolve({ ok: false });
+    }
     return new Promise((resolve, reject) => {
       this.apiService.encontra<Empresa>(`aps://integracao/cardapio/estabelecimento/${this.estabelecimentoId}`, '').subscribe((estabelecimento: Estabelecimento) => {
         this.estabelecimento = estabelecimento;

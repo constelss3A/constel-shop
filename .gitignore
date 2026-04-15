@@ -9,6 +9,10 @@
 # dependencies
 /node_modules
 
+# local-only
+/.claude
+/print
+
 # profiling files
 chrome-profiler-events.json
 speed-measure-plugin.json

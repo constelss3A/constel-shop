@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -15,7 +16,7 @@ export class NavbarCartComponent implements OnInit {
 
   sacola: Sacola;
 
-  constructor(public _ecommerceService: EcommerceService) {
+  constructor(public _ecommerceService: EcommerceService, private _router: Router) {
     this._unsubscribeAll = new Subject();
   }
 
@@ -36,6 +37,6 @@ export class NavbarCartComponent implements OnInit {
   }
 
   confirma() {
-    this._ecommerceService.confirma();
+    this._router.navigate(['/apps/e-commerce/checkout']);
   }
 }

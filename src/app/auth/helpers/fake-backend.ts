@@ -26,8 +26,8 @@ const users: User[] = [
     id: 1,
     email: 'admin@demo.com',
     password: 'admin',
-    firstName: 'Gustavo',
-    lastName: 'Tito',
+    firstName: 'Augusto',
+    lastName: 'Cavalcante',
     avatar: 'avatar-s-11.jpg',
     role: Role.Admin
   },
@@ -66,6 +66,8 @@ export class FakeBackendInterceptor implements HttpInterceptor {
       switch (true) {
         case url.endsWith('/users/authenticate') && method === 'POST':
           return authenticate();
+        case url.includes('/auth/google') && method === 'POST':
+          return next.handle(request);
         case url.endsWith('/users') && method === 'GET':
           return getUsers();
         case url.match(/\/users\/\d+$/) && method === 'GET':

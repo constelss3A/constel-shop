@@ -2,3 +2,22 @@
 @import '@core/scss/angular/libs/form-wizard.component.scss';
 @import '@core/scss/base/plugins/forms/form-validation.scss';
 @import '@core/scss/angular/libs/ratings.component.scss';
+
+.finalizar-wrapper {
+  .google-btn-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.01;
+    z-index: 2;
+    overflow: hidden;
+    cursor: pointer;
+
+    iframe, div {
+      width: 100% !important;
+      height: 100% !important;
+    }
+  }
+}
