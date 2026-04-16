@@ -129,19 +129,8 @@ export class AuthLoginV2Component implements OnInit, AfterViewInit {
 
   private handleGoogleResponse(response: any): void {
     this.error = '';
-    this.loading = true;
-    this._authenticationService.loginWithGoogle(response.credential)
-      .pipe(first())
-      .subscribe(
-        data => {
-          this.loading = false;
-          this._router.navigate([this.returnUrl]);
-        },
-        error => {
-          this.loading = false;
-          this.error = error?.error?.error || 'Erro ao autenticar com Google';
-        }
-      );
+    this._authenticationService.loginWithGoogle(response.credential);
+    this._router.navigate([this.returnUrl]);
   }
 
   // Lifecycle Hooks

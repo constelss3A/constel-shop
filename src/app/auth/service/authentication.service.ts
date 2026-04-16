@@ -82,40 +82,31 @@ export class AuthenticationService {
   }
 
   loginWithGoogle(credential: string) {
-    return this._http
-      .post<any>(`http://localhost:3000/api/auth/google`, { credential })
-      .pipe(
-        map(data => {
-          console.log('Resposta Google login:', JSON.stringify(data));
-          if (data && data.token) {
-            const googleUser = data.user || {};
-            const jwtPayload = this.decodeJwtPayload(credential) || {};
-            const fullName = googleUser.name || jwtPayload.name || '';
-            const user: User = {
-              id: googleUser.id || 0,
-              email: googleUser.email || jwtPayload.email || '',
-              password: '',
-              firstName: fullName.split(' ')[0] || googleUser.firstName || jwtPayload.given_name || '',
-              lastName: fullName.split(' ').slice(1).join(' ') || googleUser.lastName || jwtPayload.family_name || '',
-              avatar: googleUser.picture || googleUser.avatar || jwtPayload.picture || 'avatar-s-11.jpg',
-              role: googleUser.role || Role.Client,
-              token: data.token
-            };
-            localStorage.setItem('currentUser', JSON.stringify(user));
+    const payload = this.decodeJwtPayload(credential);
+    if (!payload) {
+      console.error('Não foi possível decodificar o token Google');
+      return;
+    }
+    const user: User = {
+      id: payload.sub,
+      email: payload.email || '',
+      password: '',
+      firstName: payload.given_name || '',
+      lastName: payload.family_name || '',
+      avatar: payload.picture || 'avatar-s-11.jpg',
+      role: Role.Client,
+      token: credential
+    };
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    this.currentUserSubject.next(user);
 
-            setTimeout(() => {
-              this._toastrService.success(
-                'Login realizado com sucesso via Google!',
-                'Bem-vindo, ' + user.firstName + '!',
-                { toastClass: 'toast ngx-toastr', closeButton: true }
-              );
-            }, 2500);
-
-            this.currentUserSubject.next(user);
-          }
-          return data;
-        })
+    setTimeout(() => {
+      this._toastrService.success(
+        'Login realizado com sucesso via Google!',
+        'Bem-vindo, ' + user.firstName + '!',
+        { toastClass: 'toast ngx-toastr', closeButton: true }
       );
+    }, 2500);
   }
 
   private decodeJwtPayload(token: string): any {

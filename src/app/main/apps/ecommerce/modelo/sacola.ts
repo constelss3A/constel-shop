@@ -1,6 +1,7 @@
 import { CardapioItem } from './cardapio';
 
 export class Sacola {
+  cliente: SacolaCliente;
   linhas: SacolaLinha[] = [];
   quantidade: number = 0;
   total: number = 0.00;
@@ -58,6 +59,10 @@ export class Sacola {
     }
   }
 
+  identifica(cliente: SacolaCliente) {
+    this.cliente = cliente;
+  }
+
   totalAtualiza() {
     this.quantidade = 0;
     this.total = 0.00;
@@ -66,6 +71,13 @@ export class Sacola {
       this.total += item.total;
     });
   }
+}
+
+export class SacolaCliente {
+  identificador: string; 
+  nome: string;
+  imagem: string;
+  email: string;
 }
 
 export class SacolaLinha {

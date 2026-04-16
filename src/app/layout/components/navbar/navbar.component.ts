@@ -225,18 +225,9 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private handleGoogleResponse(response: any): void {
     console.log('Google credential recebido');
-    this._authenticationService.loginWithGoogle(response.credential)
-      .pipe(first())
-      .subscribe(
-        data => {
-          console.log('Login Google OK', data);
-          this.currentUser = this._authenticationService.currentUserValue;
-          this._cd.detectChanges();
-        },
-        error => {
-          console.error('Erro ao autenticar com Google', error);
-        }
-      );
+    this._authenticationService.loginWithGoogle(response.credential);
+    this.currentUser = this._authenticationService.currentUserValue;
+    this._cd.detectChanges();
   }
 
   /**

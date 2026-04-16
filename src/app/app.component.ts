@@ -93,6 +93,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Subscribe to config changes
     this._coreConfigService.config.pipe(takeUntil(this._unsubscribeAll)).subscribe(config => {
+      config.layout.customizer = false;
       this.coreConfig = config;
 
       // Set application default language.

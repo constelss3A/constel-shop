@@ -3,6 +3,21 @@
 @import '@core/scss/base/plugins/forms/form-validation.scss';
 @import '@core/scss/angular/libs/ratings.component.scss';
 
+app-ecommerce-checkout .ecommerce-card .item-img {
+  min-width: 164px !important;
+  max-width: 164px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+
+  img {
+    width: 100px !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+}
+
 .finalizar-wrapper {
   .google-btn-overlay {
     position: absolute;

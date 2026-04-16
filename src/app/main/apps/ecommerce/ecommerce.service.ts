@@ -8,12 +8,14 @@ import { ApiService } from 'app/modulos/api.service';
 import { Cardapio } from './modelo/cardapio';
 import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
 import { Estabelecimento } from 'app/modulos/administrativo/estabelecimento/estabelecimento';
-import { Sacola, SacolaLinha } from './modelo/sacola';
+import { Sacola, SacolaCliente, SacolaLinha } from './modelo/sacola';
 import { Localizador } from 'app/modulos/venda/localizador/localizador';
 import { Pedido, PedidoModelo, PedidoTipo } from 'app/modulos/integracao/pedido/pedido';
 import { PedidoItem } from 'app/modulos/integracao/pedido/pedido-item';
 import { Item } from 'app/modulos/recurso/item/item';
 import { ToastService } from 'app/main/components/toasts/toasts.service';
+import { Cliente } from 'app/modulos/venda/localizador/cliente/cliente';
+import { AuthenticationService } from 'app/auth/service';
 
 @Injectable({
   providedIn: 'root'
@@ -69,6 +71,7 @@ export class EcommerceService implements Resolve<any> {
   constructor(
     private _httpClient: HttpClient,
     private apiService: ApiService,
+    private authService: AuthenticationService,
   ) {
     this.sacola = new Sacola();
     this.onEmpresaChange = new BehaviorSubject({});
@@ -361,6 +364,9 @@ export class EcommerceService implements Resolve<any> {
     });
   }
 
+  sacolaIdentifica(cliente: SacolaCliente) {
+    this.sacola.identifica(cliente);
+  }
 
   sacolaLinhaQuantidade(linha: SacolaLinha, quantidade: number) {
     const _linha = this.getLinha(linha._id);
@@ -401,6 +407,14 @@ export class EcommerceService implements Resolve<any> {
       pedido.localizador = this.localizador;
       pedido.referencia = this.localizador.codigo;
     }
+    const user = this.authService.currentUserValue;
+    if (user) {
+      pedido.cliente = new Cliente();
+      pedido.cliente.identificador = user.id?.toString() || user.email;
+      pedido.cliente.nome = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+      pedido.cliente.email = user.email || '';
+      pedido.cliente.imagem = user.avatar || '';
+    }
     pedido.modelo = PedidoModelo.Constel;
     pedido.pedidoItens = [];
     var sequencial = 0;
@@ -426,6 +440,11 @@ export class EcommerceService implements Resolve<any> {
     pedido.abatimento = 0.00;
     pedido.desconto = 0.00;
     pedido.total = this.sacola.total;
+    const clienteInfo = pedido.cliente
+      ? `${pedido.cliente.nome} (${pedido.cliente.email})`
+      : 'Anônimo';
+    alert(`Confirmando pedido de ${clienteInfo}\n${pedido.pedidoItens.length} item(ns) — Total: R$ ${pedido.total.toFixed(2)}`);
+    console.log('Pedido a enviar:', JSON.stringify(pedido, null, 2));
     this.apiService.grava<Pedido>(`aps://integracao/pedido/grava`, pedido, {
       'empresa-id': this.empresa.id,
       'empresa-nome': this.empresa.nome,

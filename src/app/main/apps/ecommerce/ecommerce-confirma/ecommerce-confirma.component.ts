@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import Stepper from 'bs-stepper';
 
 import { EcommerceService } from 'app/main/apps/ecommerce/ecommerce.service';
-import { Sacola, SacolaLinha } from '../modelo/sacola';
+import { Sacola, SacolaCliente, SacolaLinha } from '../modelo/sacola';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
@@ -112,6 +112,10 @@ export class EcommerceConfirmaComponent implements OnInit {
         ]
       }
     };
+  }
+
+  finalizar() {
+    this._ecommerceService.confirma();
   }
 
   quantidadeChange(linha: SacolaLinha, event: any) {

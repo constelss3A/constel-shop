@@ -1,6 +1,7 @@
 import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
 import { Estabelecimento } from 'app/modulos/administrativo/estabelecimento/estabelecimento';
 import { Localizador } from 'app/modulos/venda/localizador/localizador';
+import { Cliente } from 'app/modulos/venda/localizador/cliente/cliente';
 import { PedidoItem } from './pedido-item';
 
 export class Pedido {
@@ -9,6 +10,7 @@ export class Pedido {
   empresa: Empresa;
   estabelecimento: Estabelecimento;
   localizador: Localizador;
+  cliente: Cliente;
   referencia: string;
   modelo: PedidoModelo;
   pedidoItens: PedidoItem[];

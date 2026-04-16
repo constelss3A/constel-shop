@@ -2,6 +2,10 @@
   <app-content-header [contentHeader]="contentHeader"></app-content-header>
   <div class="content-body">
     <section class="ecommerce-application">
+      <div class="d-flex align-items-center my-2" *ngIf="localizador">
+        <img src="assets/images/ecommerce/localizador.png" width="32" height="32" alt="modalidade">
+        <span class="font-medium-3 ml-50">{{ localizador?.modalidade?.nome }} {{ localizador?.codigo }}</span>
+      </div>
       <div id="place-order" class="list-view product-checkout">
         <!-- Sacola -->
         <div class="checkout-items">
@@ -76,12 +80,8 @@
                     <div class="detail-amt">{{ sacola?.quantidade || 0 }}</div>
                   </li>
                   <li class="price-detail">
-                    <div class="detail-title">Subtotal</div>
+                    <div class="detail-title">Total de itens</div>
                     <div class="detail-amt">{{ (sacola?.total || 0) | currency:'BRL' }}</div>
-                  </li>
-                  <li class="price-detail">
-                    <div class="detail-title">Taxa de entrega</div>
-                    <div class="detail-amt discount-amt text-success">Grátis</div>
                   </li>
                 </ul>
                 <hr />

@@ -4,7 +4,7 @@ import { first, takeUntil } from 'rxjs/operators';
 
 import { EcommerceService } from 'app/main/apps/ecommerce/ecommerce.service';
 import { AuthenticationService } from 'app/auth/service';
-import { Sacola, SacolaLinha } from '../modelo/sacola';
+import { Sacola, SacolaCliente, SacolaLinha } from '../modelo/sacola';
 
 declare const google: any;
 
@@ -18,6 +18,7 @@ declare const google: any;
 export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
   public contentHeader: object;
   public sacola: Sacola;
+  public localizador: any;
   public logado = false;
 
   private _unsubscribeAll = new Subject<void>();
@@ -33,6 +34,10 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
     this._ecommerceService.onSacolaChange
       .pipe(takeUntil(this._unsubscribeAll))
       .subscribe(sacola => (this.sacola = sacola));
+
+    this._ecommerceService.onLocalizadorChange
+      .pipe(takeUntil(this._unsubscribeAll))
+      .subscribe(localizador => (this.localizador = localizador));
 
     this._authenticationService.currentUser
       .pipe(takeUntil(this._unsubscribeAll))
@@ -104,11 +109,6 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
   }
 
   private handleGoogleResponse(response: any): void {
-    this._authenticationService.loginWithGoogle(response.credential)
-      .pipe(first())
-      .subscribe(
-        () => { /* logado — usuário clica Finalizar para enviar o pedido */ },
-        err => console.error('Erro ao autenticar com Google', err)
-      );
+    this._authenticationService.loginWithGoogle(response.credential);
   }
 }
