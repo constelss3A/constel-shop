@@ -37,11 +37,11 @@ export class EcommerceService implements Resolve<any> {
   onLocalizadorChange: BehaviorSubject<any>;
   onCardapioChange: BehaviorSubject<any>;
   onSacolaChange: BehaviorSubject<any>;
-  public onProductListChange: BehaviorSubject<any>;
-  public onRelatedProductsChange: BehaviorSubject<any>;
-  public onWishlistChange: BehaviorSubject<any>;
-  public onCartListChange: BehaviorSubject<any>;
-  public onSelectedProductChange: BehaviorSubject<any>;
+  onProductListChange: BehaviorSubject<any>;
+  onRelatedProductsChange: BehaviorSubject<any>;
+  onWishlistChange: BehaviorSubject<any>;
+  onCartListChange: BehaviorSubject<any>;
+  onSelectedProductChange: BehaviorSubject<any>;
 
   // Private
   private idHandel;
@@ -193,6 +193,10 @@ export class EcommerceService implements Resolve<any> {
         resolve({ ok: true });
       }, reject);
     });
+  }
+
+  getItemDetalhado(id: string): Observable<Item> {
+    return this.apiService.obtem<Item>(`aps://integracao/cardapio/item`, id);
   }
 
   /**

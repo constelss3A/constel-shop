@@ -143,6 +143,8 @@ export class EcommerceShopComponent implements OnInit {
   }
 
   sacolaAdiciona(item: CardapioItem) {
+    const itemDetalhado = this._ecommerceService.getItemDetalhado(item.id).toPromise();
+    console.log('itemDetalhado', itemDetalhado);
     this._ecommerceService.addToCart(item.id).then();
   }
 }

@@ -1,60 +1,27 @@
 import { BaseEmpresa } from 'app/modulos/base';
-import { CategoriaR } from '../categoria/categoria';
+import { Categoria } from '../categoria/categoria';
+import { Unidade } from '../unidade/unidade';
 
 export class Item extends BaseEmpresa {
   codigo: string;
   nome: string;
   descricao: string;
+  situacao: ItemSituacao;
+  medida: string;
   imagem: string;
-  situacao = ItemSituacao.Ativo;
   atributos: string[];
-  estrela = false;
-  categoria: CategoriaR[];
+  favorito: boolean;
+  estrela: boolean;
+  fracionamento: boolean;
+  ordem: number | null;
+  categoria: Categoria;
   tipo = ItemTipo.Produto;
-  // ean: string;
-  // unidade: UnidadeR;
-  // ncm: NCMR;
-  // cest: CESTR
-  // fracionamento = false;
-  // balanca = false;
-  // estoque = true;
-  // estoqueMinimo = 0.000;
-  // estoqueMaximo = 0.000;
-  // fabricacao: ItemFabricacao;
-  // validade: number;
-  // mgv: boolean;
-  // lote = ItemLote.Nenhum;
-  // serie = ItemSerie.Nenhum;
-  // compra = true;
-  // compraConta: ContaR;
-  // compraOperacao: OperacaoR;
-  // compraEstabelecimentoIds: string[];
-  // venda = true;
-  // vendaConta: ContaR;
-  // vendaOperacao: OperacaoR;
-  // vendaEstabelecimentoIds: string[];
-  // vendaAtendimento = true;
-  // vendaAutoatendimento = true;
-  // vendaInternet = true;
-  // comissao = true;
-  // comissaoEstabelecimentoIds: string[];
-  // producaoFicha = false;
-  // insumos = false;
-  // montagem = false;
-  // acompanhamento = false;
-  // favorito = false;
-  // ordem = 1;
-  // peso = 0.000;
-  // ficha: string;
-  // alergenos: number[];
-  // observacoes: string;
-  // precoEdita = false;
-  // precoMinimo = 100;
-  // precoMaximo = 100;
-  // itemEstabelecimentos: ItemEstabelecimento[];
-  // itemCodigos: ItemCodigo[];
-  // itemPrecos: ItemPreco[];
-  // itemOperacoes: ItemOperacoes[];
+  valor: number;
+  promocao: string;
+  montagem: boolean;
+  categoriaCodigo: string;
+  alergenos: number[];
+  composicao?: Composicao;
 }
 
 export enum ItemSituacao {
@@ -90,3 +57,76 @@ export const ItemTipoMap = new Map<ItemTipo, string>([
   [ItemTipo.TaxaDeServico, 'Taxa de Serviço'],
   [ItemTipo.TaxaDeEntrega, 'Taxa de Entrega'],
 ]);
+
+export class ItemC extends BaseEmpresa {
+  codigo: string;
+  nome: string;
+}
+
+export class Composicao extends BaseEmpresa {
+  codigo: string;
+  situacao: ComposicaoSituacao;
+  tipo: ComposicaoTipo;
+  item: ItemC;
+  unidade: Unidade;
+  fator: number;
+  observacoes: string;
+  composicaoGrupos: ComposicaoGrupo[];
+  composicaoObservacoes: ComposicaoObservacao[];
+}
+
+export enum ComposicaoSituacao {
+  Ativa = 1,
+  Suspensa = 50,
+  Desativada = 90,
+}
+
+export enum ComposicaoTipo {
+  Montagem = 10,
+  Insumo = 20,
+  Beneficiamento = 30,
+  Fabricacao = 40,
+}
+
+export enum ComposicaoAcao {
+  Incluir = 10,
+  //Editar = 20,
+  Excluir = 30,
+}
+
+export class ComposicaoGrupo {
+  situacao: ComposicaoSituacao;
+  nome: string;
+  tipo: ComposicaoGrupoTipo;
+  ordem: number;
+  minimo: number;
+  maximo: number;
+  valor: number;
+  composicaoGrupoItens: ComposicaoGrupoItem[];
+}
+
+export enum ComposicaoGrupoTipo {
+  Acompanhamento = 5,
+  Opcional = 10,
+  Adicional = 20,
+  Complemento = 30,
+}
+
+export class ComposicaoGrupoItem {
+  situacao: ComposicaoSituacao;
+  item: ItemC;
+  unidade: Unidade;
+  quantidade: number;
+  fator: number;
+  minimo: number;
+  maximo: number;
+  valor: number;
+  imprimir: boolean;
+}
+
+export class ComposicaoObservacao {
+  situacao: ComposicaoSituacao;
+  nome: string;
+  acao: ComposicaoAcao;
+  item: ItemC;
+}
