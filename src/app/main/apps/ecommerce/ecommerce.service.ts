@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 
+import { AuthenticationService } from 'app/auth/service';
 import { EComProduct } from './modelo/product';
 import { ApiService } from 'app/modulos/api.service';
 import { Cardapio } from './modelo/cardapio';
@@ -13,9 +14,7 @@ import { Localizador } from 'app/modulos/venda/localizador/localizador';
 import { Pedido, PedidoModelo, PedidoTipo } from 'app/modulos/integracao/pedido/pedido';
 import { PedidoItem } from 'app/modulos/integracao/pedido/pedido-item';
 import { Item } from 'app/modulos/recurso/item/item';
-import { ToastService } from 'app/main/components/toasts/toasts.service';
 import { Cliente } from 'app/modulos/venda/localizador/cliente/cliente';
-import { AuthenticationService } from 'app/auth/service';
 
 @Injectable({
   providedIn: 'root'
@@ -399,21 +398,34 @@ export class EcommerceService implements Resolve<any> {
   confirma() {
     const pedido = new Pedido();
     pedido.tipo = PedidoTipo.Autoatendimento;
-    pedido.empresa = this.empresa;
-    pedido.estabelecimento = this.estabelecimento;
+    pedido.empresa = {
+      id: this.empresa.id,
+      codigo: this.empresa.codigo,
+      nome: this.empresa.nome,
+    };
+    pedido.estabelecimento = {
+      id: this.estabelecimento.id,
+      codigo: this.estabelecimento.codigo,
+      nome: this.estabelecimento.nome,
+    };
     pedido.referencia = '';
     if (this.localizador) {
       pedido.tipo = this.localizador.tipo || PedidoTipo.Autoatendimento;
-      pedido.localizador = this.localizador;
+      pedido.localizador = {
+        id: this.localizador.id,
+        codigo: this.localizador.codigo,
+        nome: this.localizador.nome,
+        tipo: this.localizador.tipo,
+      };
       pedido.referencia = this.localizador.codigo;
     }
     const user = this.authService.currentUserValue;
     if (user) {
-      pedido.cliente = new Cliente();
-      pedido.cliente.identificador = user.id?.toString() || user.email;
-      pedido.cliente.nome = `${user.firstName || ''} ${user.lastName || ''}`.trim();
-      pedido.cliente.email = user.email || '';
-      pedido.cliente.imagem = user.avatar || '';
+      pedido.pedidoCliente = new Cliente();
+      pedido.pedidoCliente.identificador = user.id?.toString() || user.email;
+      pedido.pedidoCliente.nome = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+      pedido.pedidoCliente.email = user.email || '';
+      pedido.pedidoCliente.imagem = user.avatar || '';
     }
     pedido.modelo = PedidoModelo.Constel;
     pedido.pedidoItens = [];
@@ -440,10 +452,10 @@ export class EcommerceService implements Resolve<any> {
     pedido.abatimento = 0.00;
     pedido.desconto = 0.00;
     pedido.total = this.sacola.total;
-    const clienteInfo = pedido.cliente
-      ? `${pedido.cliente.nome} (${pedido.cliente.email})`
+    const clienteInfo = pedido.pedidoCliente
+      ? `${pedido.pedidoCliente.nome} (${pedido.pedidoCliente.email})`
       : 'Anônimo';
-    alert(`Confirmando pedido de ${clienteInfo}\n${pedido.pedidoItens.length} item(ns) — Total: R$ ${pedido.total.toFixed(2)}`);
+    // alert(`Confirmando pedido de ${clienteInfo}\n${pedido.pedidoItens.length} item(ns) — Total: R$ ${pedido.total.toFixed(2)}`);
     console.log('Pedido a enviar:', JSON.stringify(pedido, null, 2));
     this.apiService.grava<Pedido>(`aps://integracao/pedido/grava`, pedido, {
       'empresa-id': this.empresa.id,

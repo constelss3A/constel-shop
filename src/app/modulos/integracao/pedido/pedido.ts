@@ -1,18 +1,28 @@
-import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
-import { Estabelecimento } from 'app/modulos/administrativo/estabelecimento/estabelecimento';
-import { Localizador } from 'app/modulos/venda/localizador/localizador';
 import { Cliente } from 'app/modulos/venda/localizador/cliente/cliente';
 import { PedidoItem } from './pedido-item';
 
 export class Pedido {
   id: string;
   tipo: PedidoTipo;
-  empresa: Empresa;
-  estabelecimento: Estabelecimento;
-  localizador: Localizador;
-  cliente: Cliente;
+  empresa: {
+    id: string;
+    codigo: string;
+    nome: string;
+  };
+  estabelecimento: {
+    id: string;
+    codigo: string;
+    nome: string;
+  };
+  localizador: {
+    id: string;
+    codigo: string;
+    nome: string;
+    tipo: number;
+  };
   referencia: string;
   modelo: PedidoModelo;
+  pedidoCliente: Cliente;
   pedidoItens: PedidoItem[];
   subtotal: number;
   acrescimo: number;
