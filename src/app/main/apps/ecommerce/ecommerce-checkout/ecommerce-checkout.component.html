@@ -59,7 +59,7 @@
                 <i data-feather="shopping-bag" class="font-large-2 text-muted mb-1"></i>
                 <h5 class="mb-0">Sua sacola está vazia</h5>
                 <p class="text-muted">Adicione itens do cardápio para continuar.</p>
-                <a class="btn btn-primary mt-1" [routerLink]="['/apps/e-commerce/shop']" rippleEffect>
+                <a class="btn btn-primary mt-1" (click)="voltarParaCardapio()"rippleEffect>
                   Voltar ao cardápio
                 </a>
               </div>

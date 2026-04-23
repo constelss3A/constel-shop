@@ -5,6 +5,7 @@ import { first, takeUntil } from 'rxjs/operators';
 import { EcommerceService } from 'app/main/apps/ecommerce/ecommerce.service';
 import { AuthenticationService } from 'app/auth/service';
 import { Sacola, SacolaCliente, SacolaLinha } from '../modelo/sacola';
+import { Router } from '@angular/router';
 
 declare const google: any;
 
@@ -28,6 +29,7 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
     private _ecommerceService: EcommerceService,
     private _authenticationService: AuthenticationService,
     private _ngZone: NgZone,
+    private _router: Router
   ) {}
 
   ngOnInit(): void {
@@ -83,6 +85,13 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
 
   finalizar() {
     this._ecommerceService.confirma();
+  }
+  
+  voltarParaCardapio() {
+    const empresaId: string = this._ecommerceService.empresa.id;
+    const estabelecimentoId: string = this._ecommerceService.estabelecimento.id;
+    const localizadorId: string = this._ecommerceService.localizador.id;
+    this._router.navigate([`/apps/e-commerce/shop/${empresaId}/${estabelecimentoId}/${localizadorId}`]);
   }
 
   private waitForGoogleAndInit(attempts = 0): void {
