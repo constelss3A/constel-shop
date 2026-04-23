@@ -430,6 +430,9 @@ export class EcommerceService implements Resolve<any> {
       pedido.pedidoCliente.nome = `${user.firstName || ''} ${user.lastName || ''}`.trim();
       pedido.pedidoCliente.email = user.email || '';
       pedido.pedidoCliente.imagem = user.avatar || '';
+      if (pedido.pedidoCliente.nome.includes('-')) {
+        pedido.pedidoCliente.nome = pedido.pedidoCliente.nome.split('-')[0].trim();
+      }
     }
     pedido.modelo = PedidoModelo.Constel;
     pedido.pedidoItens = [];
