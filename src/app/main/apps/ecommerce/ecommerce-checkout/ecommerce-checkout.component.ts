@@ -1,10 +1,10 @@
 import { AfterViewInit, Component, NgZone, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { Subject } from 'rxjs';
-import { first, takeUntil } from 'rxjs/operators';
+import { takeUntil } from 'rxjs/operators';
 
 import { EcommerceService } from 'app/main/apps/ecommerce/ecommerce.service';
 import { AuthenticationService } from 'app/auth/service';
-import { Sacola, SacolaCliente, SacolaLinha } from '../modelo/sacola';
+import { Sacola, SacolaLinha } from '../modelo/sacola';
 import { Router } from '@angular/router';
 
 declare const google: any;
@@ -51,14 +51,14 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
       });
 
     this.contentHeader = {
-      headerTitle: 'Checkout',
+      headerTitle: 'Confirmação',
       actionButton: true,
       breadcrumb: {
         type: '',
         links: [
-          { name: 'Home', isLink: true, link: '/' },
-          { name: 'eCommerce', isLink: true, link: '/' },
-          { name: 'Checkout', isLink: false }
+          { name: 'Home', isLink: false, link: '/' },
+          { name: 'eCommerce', isLink: false, link: '/' },
+          { name: 'Confirmação', isLink: false }
         ]
       }
     };
@@ -86,7 +86,7 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
   finalizar() {
     this._ecommerceService.confirma();
   }
-  
+
   voltarParaCardapio() {
     const empresaId: string = this._ecommerceService.empresa.id;
     const estabelecimentoId: string = this._ecommerceService.estabelecimento.id;
