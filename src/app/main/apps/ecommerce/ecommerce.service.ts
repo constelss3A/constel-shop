@@ -459,9 +459,9 @@ export class EcommerceService implements Resolve<any> {
     pedido.abatimento = 0.00;
     pedido.desconto = 0.00;
     pedido.total = this.sacola.total;
-    const clienteInfo = pedido.pedidoCliente
-      ? `${pedido.pedidoCliente.nome} (${pedido.pedidoCliente.email})`
-      : 'Anônimo';
+    // const clienteInfo = pedido.pedidoCliente
+    //   ? `${pedido.pedidoCliente.nome} (${pedido.pedidoCliente.email})`
+    //   : 'Anônimo';
     // alert(`Confirmando pedido de ${clienteInfo}\n${pedido.pedidoItens.length} item(ns) — Total: R$ ${pedido.total.toFixed(2)}`);
     console.log('Pedido a enviar:', JSON.stringify(pedido, null, 2));
     this.apiService.grava<Pedido>(`aps://integracao/pedido/grava`, pedido, {
