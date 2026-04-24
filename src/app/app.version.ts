@@ -1,4 +1,4 @@
 export const aplicativo = {
   nome: 'Constel/Shop',
-  versao: '1.1.5',
+  versao: '1.1.7',
 };
