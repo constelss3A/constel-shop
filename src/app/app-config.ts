@@ -32,7 +32,7 @@ export const coreConfig: CoreConfig = {
     // ? For horizontal menu, navbar type will work for navMenu type
     navbar: {
       hidden               : false,           // Boolean: true, false
-      type                 : 'floating-nav',  // navbar-static-top, fixed-top, floating-nav, d-none
+      type                 : 'fixed-top',  // navbar-static-top, fixed-top, floating-nav, d-none
       background           : 'navbar-light',  // navbar-light. navbar-dark
       customBackgroundColor: true,            // Boolean: true, false
       backgroundColor      : ''               // BS color i.e bg-primary, bg-success
