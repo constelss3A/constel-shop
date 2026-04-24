@@ -65,7 +65,11 @@
     <!--/ Notification -->
 
     <!-- Entrar (quando não logado) -->
-    <li class="nav-item d-flex align-items-center btn-entrar-wrapper" *ngIf="!currentUser">
+    <li
+      class="nav-item d-flex align-items-center btn-entrar-wrapper"
+      *ngIf="!currentUser"
+      (click)="loginWithGoogle()"
+    >
       <div id="google-btn" class="google-btn-overlay"></div>
       <span class="btn-entrar-label">
         <span [data-feather]="'log-in'" [class]="'mr-25'"></span>
