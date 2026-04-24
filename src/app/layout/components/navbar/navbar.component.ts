@@ -178,24 +178,26 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private googleReady = false;
 
-  private waitForGoogleAndInit(attempts = 0): void {
-    if (attempts > 50) {
-      console.error('Google Sign-In: script não carregou');
-      return;
+  private initGoogleSignIn(): void {
+    google.accounts.id.initialize({
+      client_id: '610456046637-h2s9nfskkg8jad5t2jpi1lg5t3n0b509.apps.googleusercontent.com',
+      callback: (res: any) => this._ngZone.run(() => this.handleGoogleResponse(res)),
+    });
+    const btnEl = document.getElementById('google-btn');
+    if (btnEl) {
+      google.accounts.id.renderButton(btnEl, { size: 'large' });
     }
+    this.googleReady = true;
+  }
+
+  private waitForGoogleAndInit(): void {
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-      google.accounts.id.initialize({
-        client_id: '610456046637-h2s9nfskkg8jad5t2jpi1lg5t3n0b509.apps.googleusercontent.com',
-        callback: (res: any) => this._ngZone.run(() => this.handleGoogleResponse(res)),
-      });
-      const btnEl = document.getElementById('google-btn');
-      if (btnEl) {
-        google.accounts.id.renderButton(btnEl, { size: 'large' });
-      }
-      this.googleReady = true;
-      console.log('Google Sign-In: inicializado');
+      this.initGoogleSignIn();
     } else {
-      setTimeout(() => this.waitForGoogleAndInit(attempts + 1), 200);
+      const script = document.querySelector('script[src*="accounts.google.com"]');
+      if (script) {
+        script.addEventListener('load', () => this.initGoogleSignIn());
+      }
     }
   }
 
