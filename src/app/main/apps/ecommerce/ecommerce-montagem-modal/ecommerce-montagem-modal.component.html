@@ -1,0 +1,103 @@
+<div class="modal-header">
+  <h5 class="modal-title">Detalhes do produto</h5>
+  <button
+    type="button"
+    class="close"
+    (click)="modal.dismiss()"
+    aria-label="Fechar"
+  >
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+<div class="modal-body p-0">
+  <div class="montagem-layout">
+    <!-- Coluna da imagem -->
+    <div class="item-imagem">
+      <img [src]="produto?.item.imagem" [alt]="produto?.item.nome" />
+    </div>
+
+    <!-- Coluna de detalhes -->
+    <div class="item-detalhes">
+      <div class="item-header">
+        <h4 class="item-nome">{{ produto?.item.nome }}</h4>
+        <p class="item-descricao" *ngIf="produto?.item.descricao">
+          {{ produto?.item.descricao }}
+        </p>
+        <p class="item-valor">R$ {{ valorComposicao | number: "1.2-2" }}</p>
+      </div>
+
+      <!-- Grupos composicao -->
+      <div class="grupo" *ngFor="let grupo of produto?.composicaoGrupos">
+        <div class="grupo-header">
+          <div class="grupo-info">
+            <span class="grupo-nome">{{ grupo.nome }}</span>
+            <span class="grupo-sub"
+              >Escolha de {{ grupo.minimo }} a {{ grupo.maximo }} opções</span
+            >
+          </div>
+          <div class="grupo-badges">
+            <span class="badge-quantidade"
+              >{{ grupo.selecionados ?? 0 }}/{{ grupo.maximo }}</span
+            >
+            <span class="badge-obrigatorio" *ngIf="grupo.minimo > 0"
+              >OBRIGATÓRIO</span
+            >
+          </div>
+        </div>
+
+        <div class="grupo-item-lista">
+          <div
+            class="grupo-item"
+            *ngFor="let grupoItem of grupo.composicaoGrupoItens"
+          >
+            <label class="grupo-item-label">
+              <span class="grupo-item-nome">{{ grupoItem.item.nome }}</span>
+              <span class="grupo-item-valor" *ngIf="grupoItem.valor > 0"
+                >+ R$ {{ grupoItem.valor | number: "1.2-2" }}</span
+              >
+              <input
+                *ngIf="grupo.maximo == 1"
+                [disabled]="checarQuantidadeSelecionada(grupo)"
+                type="checkbox"
+                [checked]="grupoItem.selecionado"
+                (change)="toggleOpcao(grupo, grupoItem)"
+                class="grupo-item-checkbox"
+              />
+              <span *ngIf="grupo.maximo == 1" class="checkmark"></span>
+              <div *ngIf="grupo.maximo > 1" class="grupo-item-quantidade">
+                <button [disabled]="grupoItem.quantidadeAtual == 0" class="btn-qtd" (click)="diminuirItem(grupo, grupoItem)">
+                  <i data-feather="minus"></i>
+                </button>
+                <span>{{ grupoItem.quantidadeAtual }}</span>
+                <button [disabled]="checarQuantidadeSelecionada(grupo)" class="btn-qtd" (click)="aumentarItem(grupo, grupoItem)">
+                  <i data-feather="plus"></i>
+                </button>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <div class="footer-quantidade">
+    <button [disabled]="quantidade == 1" class="btn-qtd" (click)="diminuir()">
+      <i data-feather="minus"></i>
+    </button>
+    <span>{{ quantidade }}</span>
+    <button class="btn-qtd" (click)="aumentar()">
+      <i data-feather="plus"></i>
+    </button>
+  </div>
+  <a
+    href="javascript:void(0)"
+    class="btn btn-primary btn-cart"
+    (click)="adicionar()"
+    rippleEffect
+  >
+    Adicionar &nbsp; {{ totalFormatado }}
+  </a>
+</div>

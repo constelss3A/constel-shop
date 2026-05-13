@@ -1,6 +1,14 @@
 @import '@core/scss/base/pages/app-ecommerce.scss';
 @import '@core/scss/angular/libs/noui-slider.component.scss';
 
+:host ::ng-deep .modal-dialog {
+  max-width: 860px;
+}
+
+:host ::ng-deep .modal-body {
+  padding: 0 !important;
+}
+
 .empresa-container {
   width: 400px;
   margin: 40px auto;
