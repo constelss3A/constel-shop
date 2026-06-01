@@ -20,6 +20,20 @@ export class Pedido {
     nome: string;
     tipo: number;
   };
+  entrega: {
+    cep: string;
+    logradouro: string;
+    numero: string;
+    complemento: string;
+    bairro: string;
+    cidade: string;
+    uf: string;
+    pontoReferencia: string;
+  };
+  pagamento: {
+    forma: number;
+    nome: string;
+  };
   referencia: string;
   modelo: PedidoModelo;
   pedidoCliente: Cliente;

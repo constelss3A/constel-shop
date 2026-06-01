@@ -45,6 +45,22 @@ const routes: Routes = [
     data: { animation: 'EcommerceCheckoutComponent' },
   },
   {
+    path: 'shop/:empresaid/:estabelecimentoid',
+    component: EcommerceShopComponent,
+    resolve: {
+      ecommerce: EcommerceService
+    },
+    data: { animation: 'EcommerceShopComponent' },
+  },
+  {
+    path: 'confirma/:empresaid/:estabelecimentoid',
+    component: EcommerceCheckoutComponent,
+    resolve: {
+      ecommerce: EcommerceService
+    },
+    data: { animation: 'EcommerceCheckoutComponent' },
+  },
+  {
     path: 'details/:id',
     component: EcommerceDetailsComponent,
     resolve: {

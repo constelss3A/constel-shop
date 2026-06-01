@@ -6,6 +6,132 @@
         <img src="assets/images/ecommerce/localizador.png" width="32" height="32" alt="modalidade">
         <span class="font-medium-3 ml-50">{{ localizador?.modalidade?.nome }} {{ localizador?.codigo }}</span>
       </div>
+
+      <!-- Como receber (delivery) -->
+      <div class="card mb-2" *ngIf="isDelivery">
+        <div class="card-body">
+          <label class="section-label mb-1">Como receber</label>
+          <hr />
+          <div class="btn-group btn-group-toggle d-flex">
+            <label class="btn btn-outline-primary flex-fill mr-1"
+              [class.active]="entregaTipo === EntregaTipo.Entrega"
+              (click)="selecionaEntregaTipo(EntregaTipo.Entrega)" rippleEffect>
+              <i data-feather="truck" class="mr-50"></i>Entrega
+            </label>
+            <label class="btn btn-outline-primary flex-fill"
+              [class.active]="entregaTipo === EntregaTipo.Retirada"
+              (click)="selecionaEntregaTipo(EntregaTipo.Retirada)" rippleEffect>
+              <i data-feather="shopping-bag" class="mr-50"></i>Retirada
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Endereco de entrega (delivery + entrega + logado) -->
+      <div class="card mb-2" *ngIf="isDelivery && isEntrega && logado">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <label class="section-label mb-0">Endereço de entrega</label>
+            <button
+              *ngIf="endereco && !enderecoEdicao"
+              type="button"
+              class="btn btn-sm btn-outline-primary"
+              (click)="enderecoEdita()"
+              rippleEffect
+            >
+              <i data-feather="edit-2" class="mr-50"></i>Editar
+            </button>
+          </div>
+          <hr />
+
+          <!-- Resumo -->
+          <ng-container *ngIf="endereco && !enderecoEdicao">
+            <p class="mb-0">
+              <span class="font-weight-bolder" *ngIf="endereco.apelido">{{ endereco.apelido }} - </span>{{ enderecoResumo }}
+            </p>
+            <small class="text-muted" *ngIf="endereco.cep">CEP {{ endereco.cep }}</small>
+            <small class="text-muted d-block" *ngIf="endereco.pontoReferencia">Ref.: {{ endereco.pontoReferencia }}</small>
+          </ng-container>
+
+          <!-- Sem endereco -->
+          <ng-container *ngIf="!endereco && !enderecoEdicao">
+            <p class="text-muted mb-1">Nenhum endereço cadastrado.</p>
+            <button type="button" class="btn btn-primary" (click)="enderecoNovo()" rippleEffect>
+              <i data-feather="plus" class="mr-50"></i>Cadastrar endereço
+            </button>
+          </ng-container>
+
+          <!-- Formulario -->
+          <div class="row" *ngIf="enderecoEdicao">
+            <div class="col-12 col-md-6 mb-1">
+              <label>Apelido</label>
+              <input type="text" class="form-control" placeholder="Casa, Trabalho..."
+                [(ngModel)]="enderecoForm.apelido" [ngModelOptions]="{ standalone: true }" />
+            </div>
+            <div class="col-12 col-md-6 mb-1">
+              <label>CEP</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="enderecoForm.cep" [ngModelOptions]="{ standalone: true }" />
+            </div>
+            <div class="col-12 col-md-8 mb-1">
+              <label>Logradouro</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="enderecoForm.logradouro" [ngModelOptions]="{ standalone: true }" />
+            </div>
+            <div class="col-12 col-md-4 mb-1">
+              <label>Número</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="enderecoForm.numero" [ngModelOptions]="{ standalone: true }" />
+            </div>
+            <div class="col-12 col-md-6 mb-1">
+              <label>Complemento</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="enderecoForm.complemento" [ngModelOptions]="{ standalone: true }" />
+            </div>
+            <div class="col-12 col-md-6 mb-1">
+              <label>Bairro</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="enderecoForm.bairro" [ngModelOptions]="{ standalone: true }" />
+            </div>
+            <div class="col-12 col-md-8 mb-1">
+              <label>Cidade</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="enderecoForm.cidade" [ngModelOptions]="{ standalone: true }" />
+            </div>
+            <div class="col-12 col-md-4 mb-1">
+              <label>UF</label>
+              <input type="text" class="form-control" maxlength="2"
+                [(ngModel)]="enderecoForm.uf" [ngModelOptions]="{ standalone: true }" />
+            </div>
+            <div class="col-12 mb-1">
+              <label>Ponto de referência</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="enderecoForm.pontoReferencia" [ngModelOptions]="{ standalone: true }" />
+            </div>
+            <div class="col-12 d-flex">
+              <button type="button" class="btn btn-primary mr-1" (click)="enderecoSalva()" rippleEffect>Salvar</button>
+              <button type="button" class="btn btn-outline-secondary" *ngIf="endereco" (click)="enderecoCancela()" rippleEffect>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Forma de pagamento (delivery) -->
+      <div class="card mb-2" *ngIf="isDelivery">
+        <div class="card-body">
+          <label class="section-label mb-1">Forma de pagamento</label>
+          <hr />
+          <div class="d-flex flex-wrap">
+            <label *ngFor="let forma of formasPagamento"
+              class="btn btn-outline-primary mr-1 mb-1"
+              [class.active]="formaPagamento?.forma === forma.forma"
+              (click)="selecionaPagamento(forma)" rippleEffect>
+              {{ forma.nome }}
+            </label>
+          </div>
+        </div>
+      </div>
+
       <div id="place-order" class="list-view product-checkout">
         <!-- Sacola -->
         <div class="checkout-items">
@@ -80,15 +206,19 @@
                     <div class="detail-amt">{{ sacola?.quantidade || 0 }}</div>
                   </li>
                   <li class="price-detail">
-                    <div class="detail-title">Total de itens</div>
+                    <div class="detail-title">Subtotal</div>
                     <div class="detail-amt">{{ (sacola?.total || 0) | currency:'BRL' }}</div>
+                  </li>
+                  <li class="price-detail" *ngIf="isDelivery && isEntrega">
+                    <div class="detail-title">Taxa de entrega</div>
+                    <div class="detail-amt">{{ frete | currency:'BRL' }}</div>
                   </li>
                 </ul>
                 <hr />
                 <ul class="list-unstyled">
                   <li class="price-detail">
                     <div class="detail-title detail-total">Total</div>
-                    <div class="detail-amt font-weight-bolder">{{ (sacola?.total || 0) | currency:'BRL' }}</div>
+                    <div class="detail-amt font-weight-bolder">{{ total | currency:'BRL' }}</div>
                   </li>
                 </ul>
                 <div class="finalizar-wrapper position-relative">

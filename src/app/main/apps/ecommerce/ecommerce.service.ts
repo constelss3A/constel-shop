@@ -15,6 +15,8 @@ import { Pedido, PedidoModelo, PedidoTipo } from 'app/modulos/integracao/pedido/
 import { PedidoItem } from 'app/modulos/integracao/pedido/pedido-item';
 import { Item } from 'app/modulos/recurso/item/item';
 import { Cliente } from 'app/modulos/venda/localizador/cliente/cliente';
+import { Endereco } from 'app/modulos/venda/entrega/endereco';
+import { EntregaTipo } from 'app/modulos/movimento/pagamento/pagamento';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +26,7 @@ export class EcommerceService implements Resolve<any> {
   empresa: Empresa;
   estabelecimento: Estabelecimento;
   localizador: Localizador;
+  endereco: Endereco;
   sacola: Sacola;
   cardapio: Cardapio;
   productList: Array<EComProduct>;
@@ -35,6 +38,7 @@ export class EcommerceService implements Resolve<any> {
   onEmpresaChange: BehaviorSubject<any>;
   onEstabelecimentoChange: BehaviorSubject<any>;
   onLocalizadorChange: BehaviorSubject<any>;
+  onEnderecoChange: BehaviorSubject<any>;
   onCardapioChange: BehaviorSubject<any>;
   onSacolaChange: BehaviorSubject<any>;
   onProductListChange: BehaviorSubject<any>;
@@ -76,6 +80,7 @@ export class EcommerceService implements Resolve<any> {
     this.onEmpresaChange = new BehaviorSubject({});
     this.onEstabelecimentoChange = new BehaviorSubject({});
     this.onLocalizadorChange = new BehaviorSubject({});
+    this.onEnderecoChange = new BehaviorSubject({});
     this.onCardapioChange = new BehaviorSubject({});
     this.onSacolaChange = new BehaviorSubject({});
     this.onProductListChange = new BehaviorSubject({});
@@ -102,6 +107,7 @@ export class EcommerceService implements Resolve<any> {
       this.localizadorId = route.params.localizadorid;
       this.sacola = new Sacola();
       this.onSacolaChange.next(this.sacola);
+      this.enderecoCarrega();
     }
     return new Promise<void>((resolve, reject) => {
       Promise.all([this.getEmpresa(), this.getEstabelecimento(), this.getLocalizador(), this.getCardapio(), this.getWishlist(), this.getCartList(), this.getSelectedProduct()]).then(() => {
@@ -141,6 +147,7 @@ export class EcommerceService implements Resolve<any> {
   getLocalizador(): Promise<{ ok: boolean }> {
     if (!this.localizadorId) {
       this.localizador = null;
+      this.onLocalizadorChange.next(this.localizador);
       return Promise.resolve({ ok: false });
     }
     return new Promise((resolve, reject) => {
@@ -150,6 +157,48 @@ export class EcommerceService implements Resolve<any> {
         resolve({ ok: true });
       }, reject);
     });
+  }
+
+  readonly freteEntrega = 5.00;
+
+  get isDelivery(): boolean {
+    return !this.localizadorId;
+  }
+
+  getFreteEntrega(): number {
+    return this.freteEntrega;
+  }
+
+  private enderecoChave(): string {
+    return `endereco.${this.empresaId}.${this.estabelecimentoId}`;
+  }
+
+  enderecoCarrega() {
+    if (!this.isDelivery) {
+      this.endereco = null;
+      this.onEnderecoChange.next(this.endereco);
+      return;
+    }
+    const dado = this.apiService.getStorageData('delivery', this.enderecoChave());
+    this.endereco = dado ? Object.assign(new Endereco(), dado) : null;
+    this.onEnderecoChange.next(this.endereco);
+  }
+
+  enderecoSalva(endereco: Endereco) {
+    if (!endereco.id) {
+      endereco.id = Date.now().toString();
+    }
+    this.endereco = endereco;
+    this.apiService.setStorageData('delivery', this.enderecoChave(), endereco);
+    this.onEnderecoChange.next(this.endereco);
+  }
+
+  enderecoResumo(endereco: Endereco): string {
+    if (!endereco) {
+      return '';
+    }
+    const complemento = endereco.complemento ? ` - ${endereco.complemento}` : '';
+    return `${endereco.logradouro}, ${endereco.numero}${complemento} - ${endereco.bairro} - ${endereco.cidade}/${endereco.uf}`;
   }
 
   getCardapio(): Promise<{ ok: boolean }> {
@@ -399,7 +448,7 @@ export class EcommerceService implements Resolve<any> {
     });
   }
 
-  confirma() {
+  confirma(opcoes: { entregaTipo?: number; formaPagamento?: { forma: number; nome: string }; frete?: number } = {}) {
     const pedido = new Pedido();
     pedido.tipo = PedidoTipo.Autoatendimento;
     pedido.empresa = {
@@ -422,6 +471,30 @@ export class EcommerceService implements Resolve<any> {
         tipo: this.localizador.tipo,
       };
       pedido.referencia = this.localizador.codigo;
+    }
+    const entregaTipo = opcoes.entregaTipo || EntregaTipo.Entrega;
+    if (this.isDelivery && entregaTipo === EntregaTipo.Entrega && this.endereco) {
+      pedido.tipo = PedidoTipo.Delivery;
+      pedido.entrega = {
+        cep: this.endereco.cep,
+        logradouro: this.endereco.logradouro,
+        numero: this.endereco.numero,
+        complemento: this.endereco.complemento,
+        bairro: this.endereco.bairro,
+        cidade: this.endereco.cidade,
+        uf: this.endereco.uf,
+        pontoReferencia: this.endereco.pontoReferencia,
+      };
+      pedido.referencia = this.enderecoResumo(this.endereco);
+    } else if (this.isDelivery && entregaTipo === EntregaTipo.Retirada) {
+      pedido.tipo = PedidoTipo.Autoatendimento;
+      pedido.referencia = 'Retirada';
+    }
+    if (opcoes.formaPagamento) {
+      pedido.pagamento = {
+        forma: opcoes.formaPagamento.forma,
+        nome: opcoes.formaPagamento.nome,
+      };
     }
     const user = this.authService.currentUserValue;
     if (user) {
@@ -453,12 +526,13 @@ export class EcommerceService implements Resolve<any> {
       pedidoItem.total = linha.total;
       pedido.pedidoItens.push(pedidoItem);
     });
+    const frete = pedido.tipo === PedidoTipo.Delivery ? (opcoes.frete ?? this.getFreteEntrega()) : 0.00;
     pedido.subtotal = this.sacola.total;
     pedido.acrescimo = 0.00;
-    pedido.frete = 0.00;
+    pedido.frete = frete;
     pedido.abatimento = 0.00;
     pedido.desconto = 0.00;
-    pedido.total = this.sacola.total;
+    pedido.total = this.sacola.total + frete;
     // const clienteInfo = pedido.pedidoCliente
     //   ? `${pedido.pedidoCliente.nome} (${pedido.pedidoCliente.email})`
     //   : 'Anônimo';

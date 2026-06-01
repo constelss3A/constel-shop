@@ -42,6 +42,10 @@ export class EcommerceShopComponent implements OnInit {
     private _ecommerceService: EcommerceService,
   ) { }
 
+  get isDelivery(): boolean {
+    return this._ecommerceService.isDelivery;
+  }
+
   // Public Methods
   // -----------------------------------------------------------------------------------------------------
 

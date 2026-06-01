@@ -4,6 +4,9 @@ import { takeUntil } from 'rxjs/operators';
 
 import { EcommerceService } from 'app/main/apps/ecommerce/ecommerce.service';
 import { AuthenticationService } from 'app/auth/service';
+import { ApiService } from 'app/modulos/api.service';
+import { Endereco } from 'app/modulos/venda/entrega/endereco';
+import { EntregaTipo, FormaPagamento } from 'app/modulos/movimento/pagamento/pagamento';
 import { Sacola, SacolaLinha } from '../modelo/sacola';
 import { Router } from '@angular/router';
 
@@ -21,6 +24,20 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
   public sacola: Sacola;
   public localizador: any;
   public logado = false;
+  public isDelivery = false;
+  public endereco: Endereco;
+  public enderecoEdicao = false;
+  public enderecoForm: Endereco = new Endereco();
+
+  public EntregaTipo = EntregaTipo;
+  public entregaTipo: number = EntregaTipo.Entrega;
+  public formasPagamento: Array<{ forma: number; nome: string }> = [
+    { forma: FormaPagamento.Pix, nome: 'Pix' },
+    { forma: FormaPagamento.CartaoCredito, nome: 'Cartão de crédito' },
+    { forma: FormaPagamento.CartaoDebito, nome: 'Cartão de débito' },
+    { forma: FormaPagamento.Dinheiro, nome: 'Dinheiro' },
+  ];
+  public formaPagamento: { forma: number; nome: string } = null;
 
   private _unsubscribeAll = new Subject<void>();
   private googleReady = false;
@@ -28,11 +45,14 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
   constructor(
     private _ecommerceService: EcommerceService,
     private _authenticationService: AuthenticationService,
+    private _apiService: ApiService,
     private _ngZone: NgZone,
     private _router: Router
   ) {}
 
   ngOnInit(): void {
+    this.isDelivery = this._ecommerceService.isDelivery;
+
     this._ecommerceService.onSacolaChange
       .pipe(takeUntil(this._unsubscribeAll))
       .subscribe(sacola => (this.sacola = sacola));
@@ -41,12 +61,23 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
       .pipe(takeUntil(this._unsubscribeAll))
       .subscribe(localizador => (this.localizador = localizador));
 
+    this._ecommerceService.onEnderecoChange
+      .pipe(takeUntil(this._unsubscribeAll))
+      .subscribe(endereco => {
+        this.endereco = endereco && endereco.id ? endereco : null;
+        if (this.logado && this.isDelivery && this.isEntrega && !this.endereco) {
+          this.enderecoNovo();
+        }
+      });
+
     this._authenticationService.currentUser
       .pipe(takeUntil(this._unsubscribeAll))
       .subscribe(user => {
         this.logado = !!user;
         if (!this.logado) {
           setTimeout(() => this.waitForGoogleAndInit(), 0);
+        } else if (this.isDelivery && this.isEntrega && !this.endereco) {
+          this.enderecoNovo();
         }
       });
 
@@ -83,15 +114,119 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
     this._ecommerceService.sacolaLinhaQuantidade(linha, event || 0);
   }
 
+  get isEntrega(): boolean {
+    return this.entregaTipo === EntregaTipo.Entrega;
+  }
+
+  get frete(): number {
+    return this.isDelivery && this.isEntrega ? this._ecommerceService.getFreteEntrega() : 0.00;
+  }
+
+  get total(): number {
+    return (this.sacola?.total || 0) + this.frete;
+  }
+
+  selecionaEntregaTipo(tipo: number) {
+    this.entregaTipo = tipo;
+    if (this.isEntrega) {
+      if (!this.endereco) {
+        this.enderecoNovo();
+      }
+    } else {
+      this.enderecoEdicao = false;
+    }
+  }
+
+  selecionaPagamento(forma: { forma: number; nome: string }) {
+    this.formaPagamento = forma;
+  }
+
   finalizar() {
+    if (this.isDelivery) {
+      if (this.isEntrega && !this.endereco) {
+        this._apiService.exibeErro('Cadastre o endereço de entrega para finalizar');
+        this.enderecoNovo();
+        return;
+      }
+      if (!this.formaPagamento) {
+        this._apiService.exibeErro('Selecione a forma de pagamento');
+        return;
+      }
+      this._ecommerceService.confirma({
+        entregaTipo: this.entregaTipo,
+        formaPagamento: this.formaPagamento,
+        frete: this.frete,
+      });
+      return;
+    }
     this._ecommerceService.confirma();
+  }
+
+  get enderecoResumo(): string {
+    return this._ecommerceService.enderecoResumo(this.endereco);
+  }
+
+  enderecoNovo() {
+    this.enderecoForm = this.endereco
+      ? Object.assign(new Endereco(), this.endereco)
+      : new Endereco();
+    this.enderecoEdicao = true;
+  }
+
+  enderecoEdita() {
+    this.enderecoForm = Object.assign(new Endereco(), this.endereco);
+    this.enderecoEdicao = true;
+  }
+
+  enderecoCancela() {
+    this.enderecoEdicao = false;
+  }
+
+  enderecoSalva() {
+    if (!this.enderecoValida(this.enderecoForm)) {
+      return;
+    }
+    this._ecommerceService.enderecoSalva(this.enderecoForm);
+    this.enderecoEdicao = false;
+  }
+
+  private enderecoValida(endereco: Endereco): boolean {
+    if (!endereco.cep) {
+      this._apiService.exibeErro('Informe o CEP');
+      return false;
+    }
+    if (!endereco.logradouro) {
+      this._apiService.exibeErro('Informe o logradouro');
+      return false;
+    }
+    if (!endereco.numero) {
+      this._apiService.exibeErro('Informe o número');
+      return false;
+    }
+    if (!endereco.bairro) {
+      this._apiService.exibeErro('Informe o bairro');
+      return false;
+    }
+    if (!endereco.cidade) {
+      this._apiService.exibeErro('Informe a cidade');
+      return false;
+    }
+    if (!endereco.uf) {
+      this._apiService.exibeErro('Informe a UF');
+      return false;
+    }
+    return true;
   }
 
   voltarParaCardapio() {
     const empresaId: string = this._ecommerceService.empresa.id;
     const estabelecimentoId: string = this._ecommerceService.estabelecimento.id;
-    const localizadorId: string = this._ecommerceService.localizador.id;
-    this._router.navigate([`/apps/e-commerce/shop/${empresaId}/${estabelecimentoId}/${localizadorId}`]);
+    const localizador = this._ecommerceService.localizador;
+    if (localizador) {
+      this._router.navigate([`/apps/e-commerce/shop/${empresaId}/${estabelecimentoId}/${localizador.id}`]);
+      return;
+    }
+    this._router.navigate([`/apps/e-commerce/shop/${empresaId}/${estabelecimentoId}`]);
   }
 
   private initGoogleSignIn(): void {

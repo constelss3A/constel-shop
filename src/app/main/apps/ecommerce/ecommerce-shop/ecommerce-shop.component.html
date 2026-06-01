@@ -18,6 +18,10 @@
         <img src="assets/images/ecommerce/localizador.png" width="32" height="32" alt="modalidade">
         <span class="font-medium-3">{{ localizador?.modalidade?.nome }} {{ localizador?.codigo }}</span>
       </div>
+      <div class="d-flex align-items-center my-2" *ngIf="isDelivery">
+        <img src="assets/images/ecommerce/moto.svg" width="32" height="32" alt="delivery">
+        <span class="font-medium-3 ml-50 badge badge-light-primary">Delivery</span>
+      </div>
       <div class="categorias">
         <div class="categoria" *ngFor="let categoria of cardapio.categorias">
           <img class="categoria-imagem mr-1" [src]="categoria.imagem" alt="categoria" />
