@@ -1,0 +1,365 @@
+$ct-primary: #7367f0;
+$ct-success: #28c76f;
+
+.config-taxa {
+  padding-bottom: 5rem;
+
+  .config-taxa-card {
+    margin-bottom: 1.5rem;
+    border: none;
+    box-shadow: 0 4px 24px 0 rgba(34, 41, 47, 0.1);
+  }
+
+  // Tamanho padrao unico de campo em todas as abas (Fixo / Dinamica / Raio / Bairro)
+  .form-control,
+  select.form-control,
+  .custom-select,
+  .input-group-text {
+    height: calc(1.5em + 0.5rem + 2px);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.95rem;
+  }
+  .input-group-text { font-size: 0.85rem; }
+
+  // Cabecalho do card de estabelecimento
+  .config-taxa-head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    .config-taxa-head-icon {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba($ct-primary, 0.12);
+      color: $ct-primary;
+
+      i { font-size: 1.3rem; }
+    }
+  }
+
+  .config-taxa-loaded {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.9rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    background: rgba($ct-success, 0.12);
+    color: darken($ct-success, 8%);
+
+    i { font-size: 1rem; }
+  }
+
+  // Cards de tipo de cobranca
+  .config-taxa-tipo {
+    position: relative;
+    height: 100%;
+    cursor: pointer;
+    padding: 0.85rem 0.75rem 0.7rem;
+    border: 1px solid #ebe9f1;
+    border-radius: 0.6rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    background: #fff;
+
+    &:hover {
+      border-color: rgba($ct-primary, 0.6);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba($ct-primary, 0.15);
+    }
+
+    &.active {
+      border-color: $ct-primary;
+      background: rgba($ct-primary, 0.06);
+      box-shadow: 0 0 0 1px $ct-primary inset;
+
+      .config-taxa-tipo-icon {
+        background: $ct-primary;
+        color: #fff;
+      }
+      .config-taxa-tipo-check {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .config-taxa-tipo-check {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: $ct-primary;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0.4);
+      transition: all 0.2s ease;
+
+      i { font-size: 0.75rem; }
+    }
+
+    .config-taxa-tipo-icon {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 0.45rem;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba($ct-primary, 0.12);
+      color: $ct-primary;
+      transition: all 0.2s ease;
+
+      i { font-size: 1.1rem; }
+    }
+
+    .config-taxa-tipo-nome {
+      display: block;
+      font-weight: 600;
+      color: #5e5873;
+    }
+
+    .config-taxa-tipo-desc {
+      display: block;
+      margin-top: 0.15rem;
+      color: #b9b9c3;
+      line-height: 1.25;
+    }
+  }
+
+  .config-taxa-money {
+    max-width: 240px;
+  }
+
+  // Linha compacta de regras gerais (entrega gratis / pico / gratis acima de X)
+  .config-taxa-regras {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.25rem 1.75rem;
+    padding-top: 0.25rem;
+
+    .custom-switch { margin: 0; }
+
+    .config-taxa-regra-inline {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: opacity 0.2s ease;
+    }
+
+    .config-taxa-regra-lbl {
+      font-size: 0.85rem;
+      color: #6e6b7b;
+      white-space: nowrap;
+    }
+
+    .config-taxa-mini {
+      width: 110px;
+
+      .form-control,
+      .input-group-text {
+        height: calc(1.4em + 0.3rem + 2px);
+        padding: 0.15rem 0.5rem;
+        font-size: 0.8rem;
+      }
+      .form-control { text-align: right; }
+    }
+
+    .config-taxa-disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+  }
+
+  // Editor de faixas (Raio / Dinamica)
+  // Editor de faixas: compacto na altura, largura limitada, fonte legivel
+  .config-taxa-faixa-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 640px;
+    padding: 0 0 0.3rem 2rem;
+
+    .config-taxa-faixa-col {
+      flex: 1 1 0;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #b9b9c3;
+      font-weight: 600;
+    }
+    .config-taxa-faixa-spacer { flex: 0 0 76px; }
+  }
+
+  .config-taxa-faixa-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 640px;
+    margin-bottom: 0.5rem;
+
+    .input-group { flex: 1 1 0; }
+
+    .form-control,
+    .input-group-text {
+      height: calc(1.5em + 0.5rem + 2px);
+      padding: 0.3rem 0.7rem;
+      font-size: 0.95rem;
+    }
+    .input-group-text { padding: 0.3rem 0.6rem; font-size: 0.85rem; }
+
+    .btn-icon {
+      flex: 0 0 auto;
+      padding: 0.4rem;
+      line-height: 1;
+      i { font-size: 1rem; }
+    }
+  }
+
+  .config-taxa-faixa-switch {
+    flex: 0 0 auto;
+    white-space: nowrap;
+
+    .custom-control-label {
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+  }
+
+  .config-taxa-faixa-index {
+    flex: 0 0 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $ct-primary;
+    background: rgba($ct-primary, 0.12);
+  }
+
+  .config-taxa-faixa-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 0 0 auto;
+    font-size: 0.78rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 1rem;
+    background: rgba($ct-success, 0.12);
+    color: darken($ct-success, 6%);
+    i { font-size: 0.85rem; }
+  }
+
+  // Linha de bairro
+  .config-taxa-bairro {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+    max-width: 760px;
+
+    // Nome (filho direto)
+    > .form-control {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: calc(1.5em + 0.5rem + 2px);
+      font-size: 0.95rem;
+    }
+
+    .config-taxa-bairro-valor {
+      flex: 0 0 130px;
+      flex-wrap: nowrap;
+
+      .form-control {
+        min-width: 0;
+        font-size: 0.95rem;
+      }
+      .form-control,
+      .input-group-text { height: calc(1.5em + 0.5rem + 2px); }
+      .input-group-text { font-size: 0.85rem; padding: 0.3rem 0.6rem; }
+    }
+
+    .custom-switch { flex: 0 0 auto; }
+
+    .btn-icon { flex: 0 0 auto; }
+
+    .config-taxa-bairro-tag {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 1rem;
+      background: rgba(#ea5455, 0.12);
+      color: #ea5455;
+
+      &.ok {
+        background: rgba($ct-success, 0.12);
+        color: darken($ct-success, 6%);
+      }
+      i { font-size: 0.8rem; }
+    }
+  }
+
+  .config-taxa-alert {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    i { font-size: 1.05rem; }
+  }
+
+  .config-taxa-empty {
+    color: #b9b9c3;
+    font-style: italic;
+    margin: 0.25rem 0 0;
+  }
+
+  // Mapa
+  .config-taxa-map-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .config-taxa-map {
+    height: 420px;
+    border-radius: 0.5rem;
+    border: 1px solid #ebe9f1;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  // Barra de acao fixa
+  .config-taxa-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    border-radius: 0.6rem;
+    background: #fff;
+    box-shadow: 0 -4px 24px 0 rgba(34, 41, 47, 0.12);
+
+    .btn { white-space: nowrap; }
+  }
+}

@@ -249,7 +249,26 @@ Validacao:
       editar endereco, bloquear finalizar sem endereco, confirmar pedido com tipo Delivery.
 
 Evolucao da feature:
-- [ ] Regra de frete: calcular `pedido.frete` (hoje fixo em 0.00) e exibir nos totais.
+- [x] Regra de frete: taxa de entrega por raio (Haversine) com faixas mockadas por
+      estabelecimento; origem e geocodificacao mockadas (assinatura final Observable);
+      fora de area oferece retirada no balcao. Ver `docs/DISCOVERY-taxa-entrega-por-raio (1).md`.
+      Arquivos: `modulos/venda/entrega/taxa-entrega.ts` (novo), `endereco.ts` (lat/lng),
+      `ecommerce.service.ts` (estabelecimentoCoordenada/enderecoGeocodifica/distanciaCalcula/
+      freteCalcula/freteRecalcula + onFreteChange), checkout `.ts`/`.html`.
+      Pendente (integracao real): origem real do estabelecimento, provedor de geocodificacao
+      com chave em `environment`, faixas via endpoint `aps://...`, frete gratis por subtotal.
+- [x] Configuracao de taxa de entrega (4 tipos) + menu lateral. Tela em
+      `apps/e-commerce/config-taxa-entrega` (item de menu "Taxa de entrega") com selecao de
+      empresa/estabelecimento e edicao por tipo: Fixo, Dinamica (por km/faixas), Bairro
+      (mapa Leaflet + ponto-em-poligono), Raio (aneis). Motor unico
+      `modulos/venda/entrega/taxa-entrega-calculo.ts` (Haversine, ray casting, dispatcher por
+      `TaxaTipo`); modelos em `taxa-entrega.ts`; service carrega/salva config por estabelecimento
+      (`taxaEntregaConfigCarrega/Salva`, `onTaxaConfigChange`) e usa o motor no `freteRecalcula()`;
+      geocoding via Nominatim/OSM com cache + fallback mock. Mapa: `leaflet` + `leaflet-draw` (OSM).
+      Spec/plano em `docs/superpowers/`. Ver `docs/taxa-entrega-tipos.md`.
+      Pendente (integracao real): endpoint de config (`aps://...`) no lugar do storage; dropdown
+      real de empresa/estabelecimento; distancia por rota (Distance Matrix/OSRM); base GeoJSON de
+      bairros pronta; import KML; substituir `window.prompt` do bairro por modal Angular.
 - [ ] Validacao de CEP: mascara e busca de endereco por CEP (autopreencher logradouro/bairro/cidade/uf).
 - [ ] Mostrar endereco e frete no resumo do pedido (checkout) e na tela de confirmacao.
 - [ ] Multiplos enderecos por cliente: listar, escolher e definir endereco padrao (opcional).

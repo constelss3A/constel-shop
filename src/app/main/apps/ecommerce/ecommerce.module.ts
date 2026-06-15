@@ -20,6 +20,7 @@ import { EcommerceShopComponent } from 'app/main/apps/ecommerce/ecommerce-shop/e
 import { EcommerceSidebarComponent } from 'app/main/apps/ecommerce/ecommerce-shop/sidebar/sidebar.component';
 import { EcommerceCheckoutComponent } from 'app/main/apps/ecommerce/ecommerce-checkout/ecommerce-checkout.component';
 import { EcommerceCheckoutItemComponent } from 'app/main/apps/ecommerce/ecommerce-checkout/ecommerce-checkout-item/ecommerce-checkout-item.component';
+import { EcommerceConfigTaxaComponent } from 'app/main/apps/ecommerce/ecommerce-config-taxa/ecommerce-config-taxa.component';
 
 const DEFAULT_SWIPER_CONFIG: SwiperConfigInterface = {
   direction: 'horizontal',
@@ -80,7 +81,12 @@ const routes: Routes = [
     path: 'details',
     redirectTo: '/apps/e-commerce/details/27', //Redirection
     data: { animation: 'EcommerceDetailsComponent' }
-  }
+  },
+  {
+    path: 'config-taxa-entrega',
+    component: EcommerceConfigTaxaComponent,
+    data: { animation: 'EcommerceConfigTaxaComponent' },
+  },
 ];
 
 @NgModule({
@@ -90,7 +96,8 @@ const routes: Routes = [
     EcommerceDetailsComponent,
     EcommerceCheckoutComponent,
     EcommerceItemComponent,
-    EcommerceCheckoutItemComponent
+    EcommerceCheckoutItemComponent,
+    EcommerceConfigTaxaComponent
   ],
   imports: [
     CommonModule,

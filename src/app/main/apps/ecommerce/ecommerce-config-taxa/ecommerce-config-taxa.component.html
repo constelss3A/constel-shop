@@ -1,0 +1,283 @@
+<div class="content-wrapper container-xxl p-0">
+  <app-content-header [contentHeader]="contentHeader"></app-content-header>
+  <div class="content-body">
+    <section class="ecommerce-application config-taxa">
+
+      <!-- Estabelecimento -->
+      <div class="card config-taxa-card">
+        <div class="card-body">
+          <div class="config-taxa-head">
+            <div class="config-taxa-head-icon"><i class="feather icon-briefcase"></i></div>
+            <div>
+              <h4 class="mb-0">Estabelecimento</h4>
+              <small class="text-muted">Carregue a loja para editar a taxa de entrega dela</small>
+            </div>
+          </div>
+
+          <div class="row align-items-end">
+            <div class="col-12 col-lg-5 mb-1 mb-lg-0">
+              <label class="form-label">Empresa (id)</label>
+              <div class="input-group">
+                <div class="input-group-prepend"><span class="input-group-text"><i class="feather icon-home"></i></span></div>
+                <input type="text" class="form-control" placeholder="id da empresa"
+                  [(ngModel)]="empresaId" [ngModelOptions]="{ standalone: true }" (ngModelChange)="carregado = false" />
+              </div>
+            </div>
+            <div class="col-12 col-lg-5 mb-1 mb-lg-0">
+              <label class="form-label">Estabelecimento (id)</label>
+              <div class="input-group">
+                <div class="input-group-prepend"><span class="input-group-text"><i class="feather icon-map-pin"></i></span></div>
+                <input type="text" class="form-control" placeholder="id do estabelecimento"
+                  [(ngModel)]="estabelecimentoId" [ngModelOptions]="{ standalone: true }" (ngModelChange)="carregado = false" />
+              </div>
+            </div>
+            <div class="col-12 col-lg-2">
+              <button type="button" class="btn btn-primary btn-block" (click)="carrega()" rippleEffect>
+                <i class="feather icon-download-cloud mr-50"></i>Carregar
+              </button>
+            </div>
+          </div>
+
+          <div class="config-taxa-loaded mt-1" *ngIf="carregado">
+            <i class="feather icon-check-circle mr-50"></i>
+            Configuracao carregada. Tipo atual: <span class="font-weight-bolder ml-25">{{ tipoLabel }}</span>
+          </div>
+        </div>
+      </div>
+
+      <ng-container *ngIf="carregado">
+
+        <!-- Tipo de cobranca -->
+        <div class="card config-taxa-card">
+          <div class="card-body">
+            <label class="section-label d-block mb-1">Tipo de cobranca</label>
+            <div class="row">
+              <div class="col-6 col-xl-3 mb-1 mb-xl-0" *ngFor="let t of tipos">
+                <div class="config-taxa-tipo" [class.active]="config.tipo === t.tipo"
+                  (click)="selecionaTipo(t.tipo)" rippleEffect>
+                  <span class="config-taxa-tipo-check"><i class="feather icon-check"></i></span>
+                  <span class="config-taxa-tipo-icon"><i class="feather {{ t.icone }}"></i></span>
+                  <span class="config-taxa-tipo-nome">{{ t.nome }}</span>
+                  <small class="config-taxa-tipo-desc">{{ t.descricao }}</small>
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-1" />
+            <div class="config-taxa-regras">
+              <div class="config-taxa-regra-inline">
+                <div class="custom-control custom-switch custom-switch-success">
+                  <input type="checkbox" class="custom-control-input" id="picoAtivo"
+                    [(ngModel)]="config.picoAtivo" [ngModelOptions]="{ standalone: true }" />
+                  <label class="custom-control-label" for="picoAtivo">Preco de pico</label>
+                </div>
+                <div class="input-group input-group-sm config-taxa-mini" *ngIf="config.picoAtivo">
+                  <input type="number" step="0.1" class="form-control" placeholder="1.5"
+                    [(ngModel)]="config.picoMultiplicador" [ngModelOptions]="{ standalone: true }" />
+                  <div class="input-group-append"><span class="input-group-text">x</span></div>
+                </div>
+              </div>
+
+              <div class="config-taxa-regra-inline">
+                <span class="config-taxa-regra-lbl">Gratis acima de</span>
+                <div class="input-group input-group-sm config-taxa-mini">
+                  <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                  <input type="number" class="form-control" placeholder="0"
+                    [(ngModel)]="config.freteGratisAcimaDe" [ngModelOptions]="{ standalone: true }" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fixo -->
+        <div class="card config-taxa-card" *ngIf="config.tipo === TaxaTipo.Fixo">
+          <div class="card-body">
+            <label class="section-label d-block mb-1">Valor fixo</label>
+            <label class="form-label">Cobrado em qualquer endereco da area</label>
+            <div class="input-group config-taxa-money">
+              <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+              <input type="number" class="form-control"
+                [(ngModel)]="config.valor" [ngModelOptions]="{ standalone: true }" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Dinamica -->
+        <div class="card config-taxa-card" *ngIf="config.tipo === TaxaTipo.Dinamica">
+          <div class="card-body">
+            <label class="section-label d-block mb-1">Taxa dinamica por km</label>
+
+            <div class="custom-control custom-switch custom-switch-success mb-1">
+              <input type="checkbox" class="custom-control-input" id="modoFaixa"
+                [(ngModel)]="config.modoFaixa" [ngModelOptions]="{ standalone: true }" />
+              <label class="custom-control-label" for="modoFaixa">Usar faixas progressivas</label>
+            </div>
+
+            <div class="row" *ngIf="!config.modoFaixa">
+              <div class="col-6 col-md-3 mb-1">
+                <label class="form-label">Valor base</label>
+                <div class="input-group">
+                  <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                  <input type="number" class="form-control" [(ngModel)]="config.valorBase" [ngModelOptions]="{ standalone: true }" />
+                </div>
+              </div>
+              <div class="col-6 col-md-3 mb-1">
+                <label class="form-label">Km base</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" [(ngModel)]="config.kmBase" [ngModelOptions]="{ standalone: true }" />
+                  <div class="input-group-append"><span class="input-group-text">km</span></div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3 mb-1">
+                <label class="form-label">Valor por km</label>
+                <div class="input-group">
+                  <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                  <input type="number" class="form-control" [(ngModel)]="config.valorPorKm" [ngModelOptions]="{ standalone: true }" />
+                </div>
+              </div>
+              <div class="col-6 col-md-3 mb-1">
+                <label class="form-label">Km maximo</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" [(ngModel)]="config.kmMaximo" [ngModelOptions]="{ standalone: true }" />
+                  <div class="input-group-append"><span class="input-group-text">km</span></div>
+                </div>
+              </div>
+              <div class="col-12 col-md-5">
+                <label class="form-label">Arredondamento</label>
+                <select class="form-control" [(ngModel)]="config.arredondamento" [ngModelOptions]="{ standalone: true }">
+                  <option [ngValue]="TaxaArredondamento.PorKm">Proporcional por km</option>
+                  <option [ngValue]="TaxaArredondamento.PorKmCheio">Por km cheio</option>
+                </select>
+              </div>
+            </div>
+
+            <div *ngIf="config.modoFaixa">
+              <div class="config-taxa-faixa-header" *ngIf="config.faixasDinamica.length">
+                <span class="config-taxa-faixa-col">Ate (km)</span>
+                <span class="config-taxa-faixa-col">Valor</span>
+                <span class="config-taxa-faixa-spacer"></span>
+              </div>
+              <div class="config-taxa-faixa-row" *ngFor="let f of config.faixasDinamica; let i = index">
+                <span class="config-taxa-faixa-index">{{ i + 1 }}</span>
+                <div class="input-group">
+                  <input type="number" class="form-control" placeholder="0" [(ngModel)]="f.ateKm" [ngModelOptions]="{ standalone: true }" />
+                  <div class="input-group-append"><span class="input-group-text">km</span></div>
+                </div>
+                <div class="input-group">
+                  <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                  <input type="number" class="form-control" placeholder="0,00" [(ngModel)]="f.valor" [ngModelOptions]="{ standalone: true }" />
+                </div>
+                <button type="button" class="btn btn-icon btn-flat-danger" (click)="faixaDinamicaRemove(i)" rippleEffect>
+                  <i class="feather icon-trash-2"></i>
+                </button>
+              </div>
+              <p class="config-taxa-empty" *ngIf="!config.faixasDinamica.length">Nenhuma faixa. Adicione a primeira.</p>
+              <button type="button" class="btn btn-outline-primary btn-sm mt-50" (click)="faixaDinamicaAdiciona()" rippleEffect>
+                <i class="feather icon-plus mr-50"></i>Adicionar faixa
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Raio -->
+        <div class="card config-taxa-card" *ngIf="config.tipo === TaxaTipo.Raio">
+          <div class="card-body">
+            <label class="section-label d-block mb-1">Faixas de raio</label>
+            <div class="config-taxa-faixa-header" *ngIf="config.faixasRaio.length">
+              <span class="config-taxa-faixa-col">Raio (km)</span>
+              <span class="config-taxa-faixa-col">Valor</span>
+              <span class="config-taxa-faixa-spacer"></span>
+            </div>
+            <div class="config-taxa-faixa-row" *ngFor="let f of config.faixasRaio; let i = index">
+              <span class="config-taxa-faixa-index">{{ i + 1 }}</span>
+              <div class="input-group">
+                <input type="number" class="form-control" placeholder="0" [(ngModel)]="f.raioKm" [ngModelOptions]="{ standalone: true }" />
+                <div class="input-group-append"><span class="input-group-text">km</span></div>
+              </div>
+              <div class="input-group" [class.config-taxa-disabled]="f.gratis">
+                <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                <input type="number" class="form-control" placeholder="0,00" [(ngModel)]="f.valor" [ngModelOptions]="{ standalone: true }" [disabled]="f.gratis" />
+              </div>
+              <span class="config-taxa-faixa-badge" *ngIf="f.gratis && faixaRaioConfig !== i"><i class="feather icon-gift"></i>Gratis</span>
+              <div class="custom-control custom-switch custom-switch-success config-taxa-faixa-switch" *ngIf="faixaRaioConfig === i">
+                <input type="checkbox" class="custom-control-input" [id]="'fr' + i" [(ngModel)]="f.gratis" [ngModelOptions]="{ standalone: true }" />
+                <label class="custom-control-label" [for]="'fr' + i">Gratis</label>
+              </div>
+              <button type="button" class="btn btn-icon" [ngClass]="faixaRaioConfig === i ? 'btn-primary' : 'btn-flat-secondary'"
+                (click)="faixaRaioConfigToggle(i)" ngbTooltip="Configurar faixa" rippleEffect>
+                <i class="feather icon-settings"></i>
+              </button>
+              <button type="button" class="btn btn-icon btn-flat-danger" (click)="faixaRaioRemove(i)" rippleEffect>
+                <i class="feather icon-trash-2"></i>
+              </button>
+            </div>
+            <p class="config-taxa-empty" *ngIf="!config.faixasRaio.length">Nenhuma faixa. Adicione a primeira.</p>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-50" (click)="faixaRaioAdiciona()" rippleEffect>
+              <i class="feather icon-plus mr-50"></i>Adicionar faixa
+            </button>
+          </div>
+        </div>
+
+        <!-- Bairro -->
+        <div class="card config-taxa-card" *ngIf="config.tipo === TaxaTipo.Bairro">
+          <div class="card-body">
+            <label class="section-label d-block mb-1">Bairros</label>
+            <div class="alert alert-primary config-taxa-alert" role="alert">
+              <i class="feather icon-info mr-50"></i>
+              Use a ferramenta de poligono no mapa abaixo para desenhar a area de cada bairro.
+            </div>
+
+            <div class="config-taxa-bairro" *ngFor="let b of config.bairros; let i = index">
+              <span class="config-taxa-faixa-index">{{ i + 1 }}</span>
+              <input type="text" class="form-control" placeholder="nome do bairro" [(ngModel)]="b.nome" [ngModelOptions]="{ standalone: true }" />
+              <div class="input-group config-taxa-bairro-valor">
+                <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                <input type="number" class="form-control" placeholder="0,00" [(ngModel)]="b.valor" [ngModelOptions]="{ standalone: true }" />
+              </div>
+              <div class="custom-control custom-switch custom-switch-success">
+                <input type="checkbox" class="custom-control-input" [id]="'b' + i" [(ngModel)]="b.ativo" [ngModelOptions]="{ standalone: true }" />
+                <label class="custom-control-label" [for]="'b' + i">Ativo</label>
+              </div>
+              <span class="config-taxa-bairro-tag" [class.ok]="b.poligono.length">
+                <i class="feather" [ngClass]="b.poligono.length ? 'icon-check' : 'icon-alert-triangle'"></i>
+                {{ b.poligono.length ? 'no mapa' : 'sem area' }}
+              </span>
+              <button type="button" class="btn btn-icon btn-flat-danger" (click)="bairroRemove(i)" rippleEffect>
+                <i class="feather icon-trash-2"></i>
+              </button>
+            </div>
+            <p class="config-taxa-empty" *ngIf="!config.bairros.length">Nenhum bairro. Desenhe um poligono no mapa ou adicione manualmente.</p>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-50" (click)="bairroAdiciona()" rippleEffect>
+              <i class="feather icon-plus mr-50"></i>Adicionar bairro
+            </button>
+          </div>
+        </div>
+
+        <!-- Mapa -->
+        <div class="card config-taxa-card">
+          <div class="card-body">
+            <div class="config-taxa-map-head">
+              <label class="section-label mb-0">Mapa</label>
+              <small class="text-muted" *ngIf="config.tipo === TaxaTipo.Raio">Arraste o pino para mover a origem; os aneis mostram as faixas.</small>
+              <small class="text-muted" *ngIf="config.tipo === TaxaTipo.Bairro">Use a ferramenta de poligono para desenhar cada bairro.</small>
+              <small class="text-muted" *ngIf="config.tipo === TaxaTipo.Dinamica">Arraste o pino para definir a origem das distancias.</small>
+              <small class="text-muted" *ngIf="config.tipo === TaxaTipo.Fixo">A origem nao afeta o valor fixo, mas fica registrada.</small>
+            </div>
+            <div id="config-taxa-mapa" class="config-taxa-map"></div>
+          </div>
+        </div>
+
+        <!-- Barra de acao -->
+        <div class="config-taxa-actions">
+          <span class="text-muted d-none d-md-inline">Tipo <span class="font-weight-bolder">{{ tipoLabel }}</span> - alteracoes nao salvas ficam so na tela.</span>
+          <button type="button" class="btn btn-primary" (click)="salva()" rippleEffect>
+            <i class="feather icon-save mr-50"></i>Salvar configuracao
+          </button>
+        </div>
+
+      </ng-container>
+
+    </section>
+  </div>
+</div>

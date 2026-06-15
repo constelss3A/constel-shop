@@ -49,6 +49,14 @@ const menux: CoreMenu[] = [
             type: 'item',
             icon: 'circle',
             url: 'apps/e-commerce/checkout'
+          },
+          {
+            id: 'taxa-entrega',
+            title: 'Taxa de entrega',
+            translate: 'MENU.APPS.ECOMMERCE.DELIVERYFEE',
+            type: 'item',
+            icon: 'truck',
+            url: 'apps/e-commerce/config-taxa-entrega'
           }
         ]
       },

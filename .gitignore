@@ -12,6 +12,8 @@
 # local-only
 /.claude
 /print
+/docs
+/back
 
 # profiling files
 chrome-profiler-events.json

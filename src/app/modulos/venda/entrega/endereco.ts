@@ -9,4 +9,6 @@ export class Endereco {
   cidade: string;
   uf: string;
   pontoReferencia: string;
+  latitude: number;
+  longitude: number;
 }

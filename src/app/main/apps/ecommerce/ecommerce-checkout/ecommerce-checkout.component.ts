@@ -28,6 +28,10 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
   public endereco: Endereco;
   public enderecoEdicao = false;
   public enderecoForm: Endereco = new Endereco();
+  public cepBuscando = false;
+  public frete = 0.00;
+  public foraDeArea = false;
+  public freteCalculando = false;
 
   public EntregaTipo = EntregaTipo;
   public entregaTipo: number = EntregaTipo.Entrega;
@@ -68,6 +72,14 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
         if (this.logado && this.isDelivery && this.isEntrega && !this.endereco) {
           this.enderecoNovo();
         }
+      });
+
+    this._ecommerceService.onFreteChange
+      .pipe(takeUntil(this._unsubscribeAll))
+      .subscribe(estado => {
+        this.frete = estado?.frete || 0.00;
+        this.foraDeArea = !!estado?.foraDeArea;
+        this.freteCalculando = !!estado?.calculando;
       });
 
     this._authenticationService.currentUser
@@ -118,12 +130,12 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
     return this.entregaTipo === EntregaTipo.Entrega;
   }
 
-  get frete(): number {
-    return this.isDelivery && this.isEntrega ? this._ecommerceService.getFreteEntrega() : 0.00;
+  get freteExibido(): number {
+    return this.isDelivery && this.isEntrega ? this.frete : 0.00;
   }
 
   get total(): number {
-    return (this.sacola?.total || 0) + this.frete;
+    return (this.sacola?.total || 0) + this.freteExibido;
   }
 
   selecionaEntregaTipo(tipo: number) {
@@ -148,6 +160,10 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
         this.enderecoNovo();
         return;
       }
+      if (this.isEntrega && this.foraDeArea) {
+        this._apiService.exibeErro('Endereço fora da área de entrega. Troque para retirada no balcão.');
+        return;
+      }
       if (!this.formaPagamento) {
         this._apiService.exibeErro('Selecione a forma de pagamento');
         return;
@@ -155,7 +171,7 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
       this._ecommerceService.confirma({
         entregaTipo: this.entregaTipo,
         formaPagamento: this.formaPagamento,
-        frete: this.frete,
+        frete: this.freteExibido,
       });
       return;
     }
@@ -188,6 +204,28 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
     }
     this._ecommerceService.enderecoSalva(this.enderecoForm);
     this.enderecoEdicao = false;
+  }
+
+  cepBusca(avisar: boolean = false) {
+    const cep = (this.enderecoForm.cep || '').replace(/\D/g, '');
+    if (cep.length !== 8) {
+      if (avisar) {
+        this._apiService.exibeErro('CEP deve ter 8 digitos');
+      }
+      return;
+    }
+    this.cepBuscando = true;
+    this._ecommerceService.enderecoBuscaCep(cep).subscribe(dado => {
+      this.cepBuscando = false;
+      if (!dado) {
+        this._apiService.exibeInformacao('CEP nao encontrado');
+        return;
+      }
+      this.enderecoForm.logradouro = dado.logradouro || this.enderecoForm.logradouro;
+      this.enderecoForm.bairro = dado.bairro || this.enderecoForm.bairro;
+      this.enderecoForm.cidade = dado.cidade || this.enderecoForm.cidade;
+      this.enderecoForm.uf = dado.uf || this.enderecoForm.uf;
+    });
   }
 
   private enderecoValida(endereco: Endereco): boolean {

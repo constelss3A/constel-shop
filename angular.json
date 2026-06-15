@@ -38,7 +38,9 @@
               "plyr",
               "sweetalert2",
               "bs-stepper",
-              "feather-icons"
+              "feather-icons",
+              "leaflet",
+              "leaflet-draw"
             ],
             "outputPath": "dist/vuexy",
             "index": "src/index.html",
@@ -47,6 +49,8 @@
             "tsConfig": "src/tsconfig.app.json",
             "assets": ["src/favicon.ico", "src/assets"],
             "styles": [
+              "node_modules/leaflet/dist/leaflet.css",
+              "node_modules/leaflet-draw/dist/leaflet.draw.css",
               "src/styles.scss",
               "node_modules/highlight.js/scss/atom-one-dark.scss",
               "src/assets/fonts/feather/iconfont.css",
@@ -142,7 +146,11 @@
             "polyfills": "src/polyfills.ts",
             "tsConfig": "src/tsconfig.spec.json",
             "karmaConfig": "src/karma.conf.js",
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "node_modules/leaflet/dist/leaflet.css",
+              "node_modules/leaflet-draw/dist/leaflet.draw.css",
+              "src/styles.scss"
+            ],
             "scripts": ["node_modules/apexcharts/dist/apexcharts.min.js"],
             "assets": ["src/favicon.ico", "src/assets"],
             "stylePreprocessorOptions": {

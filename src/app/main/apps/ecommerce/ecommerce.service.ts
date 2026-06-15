@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 import { AuthenticationService } from 'app/auth/service';
 import { EComProduct } from './modelo/product';
@@ -16,6 +17,8 @@ import { PedidoItem } from 'app/modulos/integracao/pedido/pedido-item';
 import { Item } from 'app/modulos/recurso/item/item';
 import { Cliente } from 'app/modulos/venda/localizador/cliente/cliente';
 import { Endereco } from 'app/modulos/venda/entrega/endereco';
+import { Coordenada, TaxaEntregaConfig, taxaEntregaConfigPadrao } from 'app/modulos/venda/entrega/taxa-entrega';
+import { taxaEntregaCalcula } from 'app/modulos/venda/entrega/taxa-entrega-calculo';
 import { EntregaTipo } from 'app/modulos/movimento/pagamento/pagamento';
 
 @Injectable({
@@ -27,6 +30,10 @@ export class EcommerceService implements Resolve<any> {
   estabelecimento: Estabelecimento;
   localizador: Localizador;
   endereco: Endereco;
+  frete: number = 0.00;
+  foraDeArea: boolean = false;
+  freteCalculando: boolean = false;
+  taxaConfig: TaxaEntregaConfig;
   sacola: Sacola;
   cardapio: Cardapio;
   productList: Array<EComProduct>;
@@ -39,6 +46,8 @@ export class EcommerceService implements Resolve<any> {
   onEstabelecimentoChange: BehaviorSubject<any>;
   onLocalizadorChange: BehaviorSubject<any>;
   onEnderecoChange: BehaviorSubject<any>;
+  onFreteChange: BehaviorSubject<any>;
+  onTaxaConfigChange: BehaviorSubject<any>;
   onCardapioChange: BehaviorSubject<any>;
   onSacolaChange: BehaviorSubject<any>;
   onProductListChange: BehaviorSubject<any>;
@@ -81,6 +90,8 @@ export class EcommerceService implements Resolve<any> {
     this.onEstabelecimentoChange = new BehaviorSubject({});
     this.onLocalizadorChange = new BehaviorSubject({});
     this.onEnderecoChange = new BehaviorSubject({});
+    this.onFreteChange = new BehaviorSubject({});
+    this.onTaxaConfigChange = new BehaviorSubject({});
     this.onCardapioChange = new BehaviorSubject({});
     this.onSacolaChange = new BehaviorSubject({});
     this.onProductListChange = new BehaviorSubject({});
@@ -107,6 +118,7 @@ export class EcommerceService implements Resolve<any> {
       this.localizadorId = route.params.localizadorid;
       this.sacola = new Sacola();
       this.onSacolaChange.next(this.sacola);
+      this.taxaEntregaConfigCarrega();
       this.enderecoCarrega();
     }
     return new Promise<void>((resolve, reject) => {
@@ -159,14 +171,99 @@ export class EcommerceService implements Resolve<any> {
     });
   }
 
-  readonly freteEntrega = 5.00;
-
   get isDelivery(): boolean {
     return !this.localizadorId;
   }
 
+  contextoDefine(empresaId: string, estabelecimentoId: string): void {
+    this.empresaId = empresaId;
+    this.estabelecimentoId = estabelecimentoId;
+  }
+
+  // Frete calculado pelo motor unificado. Mantem a assinatura usada pelo checkout e pelo confirma().
   getFreteEntrega(): number {
-    return this.freteEntrega;
+    return this.frete;
+  }
+
+  private taxaChave(): string {
+    return `taxa.${this.empresaId}.${this.estabelecimentoId}`;
+  }
+
+  taxaEntregaConfigCarrega(): TaxaEntregaConfig {
+    const dado = this.apiService.getStorageData('delivery', this.taxaChave());
+    this.taxaConfig = dado ? (dado as TaxaEntregaConfig) : taxaEntregaConfigPadrao();
+    this.onTaxaConfigChange.next(this.taxaConfig);
+    return this.taxaConfig;
+  }
+
+  taxaEntregaConfigSalva(config: TaxaEntregaConfig): void {
+    this.taxaConfig = config;
+    this.apiService.setStorageData('delivery', this.taxaChave(), config);
+    this.onTaxaConfigChange.next(this.taxaConfig);
+  }
+
+  // Recalcula o frete do endereco atual e publica em onFreteChange.
+  // Fora do delivery (mesa) ou sem endereco => frete zero.
+  freteRecalcula(): void {
+    if (!this.isDelivery || !this.endereco) {
+      this.frete = 0.00;
+      this.foraDeArea = false;
+      this.freteCalculando = false;
+      this.onFreteChange.next({ frete: this.frete, foraDeArea: this.foraDeArea, calculando: false });
+      return;
+    }
+    const config = this.taxaConfig || this.taxaEntregaConfigCarrega();
+    this.freteCalculando = true;
+    this.onFreteChange.next({ frete: this.frete, foraDeArea: this.foraDeArea, calculando: true });
+    this.enderecoGeocodifica(this.endereco).subscribe(coord => {
+      this.endereco.latitude = coord.latitude;
+      this.endereco.longitude = coord.longitude;
+      const resultado = taxaEntregaCalcula(config, coord, this.sacola.total);
+      this.frete = resultado.dentroDaArea ? resultado.valor : 0.00;
+      this.foraDeArea = !resultado.dentroDaArea;
+      this.freteCalculando = false;
+      this.onFreteChange.next({
+        frete: this.frete, foraDeArea: this.foraDeArea, calculando: false,
+        distanciaKm: resultado.distanciaKm,
+      });
+    });
+  }
+
+  // Geocoding do endereco. Real via Nominatim/OSM (gratuito, 1 req/s, exige cache).
+  // Fallback mock deterministico (derivado do CEP) quando a chamada falhar.
+  // Assinatura final Observable para trocar de provedor sem mexer na UI.
+  enderecoGeocodifica(endereco: Endereco): Observable<Coordenada> {
+    const cepNorm = (endereco.cep || '').replace(/\D/g, '');
+    const cacheChave = `geo.${cepNorm}.${(endereco.numero || '').trim()}`;
+    const cache = this.apiService.getStorageData('delivery', cacheChave);
+    if (cache) {
+      return of(cache as Coordenada);
+    }
+    const q = [endereco.logradouro, endereco.numero, endereco.bairro, endereco.cidade, endereco.uf, 'Brasil']
+      .filter(Boolean).join(', ');
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`;
+    return this._httpClient.get<any[]>(url).pipe(
+      map(res => {
+        if (res && res.length) {
+          const coord: Coordenada = { latitude: parseFloat(res[0].lat), longitude: parseFloat(res[0].lon) };
+          this.apiService.setStorageData('delivery', cacheChave, coord);
+          return coord;
+        }
+        return this.geocodificaMock(endereco);
+      }),
+      catchError(() => of(this.geocodificaMock(endereco))),
+    );
+  }
+
+  private geocodificaMock(endereco: Endereco): Coordenada {
+    const origem = (this.taxaConfig || taxaEntregaConfigPadrao()).origem;
+    const digitos = (endereco.cep || '').replace(/\D/g, '');
+    const semente = digitos ? parseInt(digitos.slice(-4), 10) : 0;
+    const offsetKm = semente % 12;
+    const rumo = ((semente % 360) * Math.PI) / 180;
+    const dLat = (offsetKm / 111) * Math.cos(rumo);
+    const dLng = (offsetKm / (111 * Math.cos((origem.latitude * Math.PI) / 180))) * Math.sin(rumo);
+    return { latitude: origem.latitude + dLat, longitude: origem.longitude + dLng };
   }
 
   private enderecoChave(): string {
@@ -182,6 +279,7 @@ export class EcommerceService implements Resolve<any> {
     const dado = this.apiService.getStorageData('delivery', this.enderecoChave());
     this.endereco = dado ? Object.assign(new Endereco(), dado) : null;
     this.onEnderecoChange.next(this.endereco);
+    this.freteRecalcula();
   }
 
   enderecoSalva(endereco: Endereco) {
@@ -191,6 +289,7 @@ export class EcommerceService implements Resolve<any> {
     this.endereco = endereco;
     this.apiService.setStorageData('delivery', this.enderecoChave(), endereco);
     this.onEnderecoChange.next(this.endereco);
+    this.freteRecalcula();
   }
 
   enderecoResumo(endereco: Endereco): string {
@@ -199,6 +298,29 @@ export class EcommerceService implements Resolve<any> {
     }
     const complemento = endereco.complemento ? ` - ${endereco.complemento}` : '';
     return `${endereco.logradouro}, ${endereco.numero}${complemento} - ${endereco.bairro} - ${endereco.cidade}/${endereco.uf}`;
+  }
+
+  // Busca endereco por CEP (ViaCEP, gratuito, sem chave). Assinatura final Observable;
+  // trocar por outro provedor/endpoint depois sem mexer na UI.
+  enderecoBuscaCep(cep: string): Observable<{ logradouro: string; bairro: string; cidade: string; uf: string } | null> {
+    const cepNorm = (cep || '').replace(/\D/g, '');
+    if (cepNorm.length !== 8) {
+      return of(null);
+    }
+    return this._httpClient.get<any>(`https://viacep.com.br/ws/${cepNorm}/json/`).pipe(
+      map(res => {
+        if (!res || res.erro) {
+          return null;
+        }
+        return {
+          logradouro: res.logradouro || '',
+          bairro: res.bairro || '',
+          cidade: res.localidade || '',
+          uf: res.uf || '',
+        };
+      }),
+      catchError(() => of(null)),
+    );
   }
 
   getCardapio(): Promise<{ ok: boolean }> {

@@ -51,6 +51,14 @@
             </p>
             <small class="text-muted" *ngIf="endereco.cep">CEP {{ endereco.cep }}</small>
             <small class="text-muted d-block" *ngIf="endereco.pontoReferencia">Ref.: {{ endereco.pontoReferencia }}</small>
+            <div class="alert alert-warning mt-1 mb-0 p-1 d-flex align-items-center justify-content-between"
+              *ngIf="foraDeArea && !freteCalculando">
+              <span>Endereço fora da área de entrega.</span>
+              <button type="button" class="btn btn-sm btn-warning"
+                (click)="selecionaEntregaTipo(EntregaTipo.Retirada)" rippleEffect>
+                Trocar para retirada
+              </button>
+            </div>
           </ng-container>
 
           <!-- Sem endereco -->
@@ -70,8 +78,18 @@
             </div>
             <div class="col-12 col-md-6 mb-1">
               <label>CEP</label>
-              <input type="text" class="form-control"
-                [(ngModel)]="enderecoForm.cep" [ngModelOptions]="{ standalone: true }" />
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="00000-000" maxlength="9"
+                  [(ngModel)]="enderecoForm.cep" [ngModelOptions]="{ standalone: true }"
+                  (blur)="cepBusca()" (keydown.enter)="cepBusca(true)" />
+                <div class="input-group-append">
+                  <button type="button" class="btn btn-outline-primary" (click)="cepBusca(true)" [disabled]="cepBuscando" rippleEffect>
+                    <span *ngIf="!cepBuscando"><i class="feather icon-search"></i></span>
+                    <span *ngIf="cepBuscando" class="spinner-border spinner-border-sm"></span>
+                  </button>
+                </div>
+              </div>
+              <small class="text-muted">Preenche logradouro, bairro, cidade e UF automaticamente.</small>
             </div>
             <div class="col-12 col-md-8 mb-1">
               <label>Logradouro</label>
@@ -211,7 +229,11 @@
                   </li>
                   <li class="price-detail" *ngIf="isDelivery && isEntrega">
                     <div class="detail-title">Taxa de entrega</div>
-                    <div class="detail-amt">{{ frete | currency:'BRL' }}</div>
+                    <div class="detail-amt">
+                      <span *ngIf="freteCalculando">Calculando...</span>
+                      <span *ngIf="!freteCalculando && foraDeArea">Fora de área</span>
+                      <span *ngIf="!freteCalculando && !foraDeArea">{{ freteExibido | currency:'BRL' }}</span>
+                    </div>
                   </li>
                 </ul>
                 <hr />
