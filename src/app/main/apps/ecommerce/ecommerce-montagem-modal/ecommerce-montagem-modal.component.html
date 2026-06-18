@@ -11,35 +11,41 @@
 </div>
 
 <div class="modal-body p-0">
-  <div class="montagem-layout">
-    <!-- Coluna da imagem -->
+  <div *ngIf="isLoading" class="montagem-loading">
+    <span class="spinner-border text-primary"></span>
+    <p>Carregando...</p>
+  </div>
+
+  <div *ngIf="!isLoading" class="montagem-layout">
     <div class="item-imagem">
-      <img [src]="produto?.item.imagem" [alt]="produto?.item.nome" />
+      <img [src]="produto?.imagem" [alt]="produto?.nome" />
     </div>
 
-    <!-- Coluna de detalhes -->
     <div class="item-detalhes">
       <div class="item-header">
-        <h4 class="item-nome">{{ produto?.item.nome }}</h4>
-        <p class="item-descricao" *ngIf="produto?.item.descricao">
-          {{ produto?.item.descricao }}
+        <h4 class="item-nome">{{ produto?.nome }}</h4>
+        <p class="item-descricao" *ngIf="produto?.descricao">
+          {{ produto?.descricao }}
         </p>
         <p class="item-valor">R$ {{ valorComposicao | number: "1.2-2" }}</p>
       </div>
 
-      <!-- Grupos composicao -->
-      <div class="grupo" *ngFor="let grupo of produto?.composicaoGrupos">
+      <div
+        class="grupo"
+        *ngFor="let grupo of produto?.composicao?.composicaoGrupos"
+      >
         <div class="grupo-header">
           <div class="grupo-info">
             <span class="grupo-nome">{{ grupo.nome }}</span>
-            <span class="grupo-sub"
-              >Escolha de {{ grupo.minimo }} a {{ grupo.maximo }} opções</span
-            >
+            <span class="grupo-sub">
+              Escolha de {{ getMinimoGrupo(grupo) }} a
+              {{ getMaximoGrupo(grupo) }} opções
+            </span>
           </div>
           <div class="grupo-badges">
-            <span class="badge-quantidade"
-              >{{ grupo.selecionados ?? 0 }}/{{ grupo.maximo }}</span
-            >
+            <span class="badge-quantidade">
+              {{ selecionadosNoGrupo(grupo) / getFatorGrupo(grupo) }}/{{ getMaximoGrupo(grupo) }}
+            </span>
             <span class="badge-obrigatorio" *ngIf="grupo.minimo > 0"
               >OBRIGATÓRIO</span
             >
@@ -53,30 +59,60 @@
           >
             <label class="grupo-item-label">
               <span class="grupo-item-nome">{{ grupoItem.item.nome }}</span>
-              <span class="grupo-item-valor" *ngIf="grupoItem.valor > 0"
-                >+ R$ {{ grupoItem.valor | number: "1.2-2" }}</span
-              >
-              <input
-                *ngIf="grupo.maximo == 1"
-                [disabled]="checarQuantidadeSelecionada(grupo)"
-                type="checkbox"
-                [checked]="grupoItem.selecionado"
-                (change)="toggleOpcao(grupo, grupoItem)"
-                class="grupo-item-checkbox"
-              />
-              <span *ngIf="grupo.maximo == 1" class="checkmark"></span>
-              <div *ngIf="grupo.maximo > 1" class="grupo-item-quantidade">
-                <button [disabled]="grupoItem.quantidadeAtual == 0" class="btn-qtd" (click)="diminuirItem(grupo, grupoItem)">
-                  <i data-feather="minus"></i>
-                </button>
-                <span>{{ grupoItem.quantidadeAtual }}</span>
-                <button [disabled]="checarQuantidadeSelecionada(grupo)" class="btn-qtd" (click)="aumentarItem(grupo, grupoItem)">
-                  <i data-feather="plus"></i>
-                </button>
-              </div>
+              <span class="grupo-item-valor" *ngIf="grupoItem.valor > 0">
+                + R$ {{ grupoItem.valor | number: "1.2-2" }}
+              </span>
+
+              <ng-container *ngIf="!usaStepperNoGrupo(grupo); else stepper">
+                <input
+                  type="checkbox"
+                  [disabled]="
+                    checarQuantidadeSelecionada(grupo) &&
+                    !isItemSelecionado(grupoItem)
+                  "
+                  [checked]="isItemSelecionado(grupoItem)"
+                  (change)="toggleOpcao(grupo, grupoItem)"
+                  class="grupo-item-checkbox"
+                />
+                <span class="checkmark"></span>
+              </ng-container>
+
+              <ng-template #stepper>
+                <div class="grupo-item-quantidade">
+                  <button
+                    [disabled]="getQuantidadeItem(grupoItem) === 0"
+                    class="btn-qtd"
+                    (click)="diminuirItem(grupo, grupoItem)"
+                  >
+                    <i data-feather="minus"></i>
+                  </button>
+                  <span>{{ getQuantidadeItem(grupoItem) }}</span>
+                  <button
+                    [disabled]="checarQuantidadeSelecionada(grupo)"
+                    class="btn-qtd"
+                    (click)="aumentarItem(grupo, grupoItem)"
+                  >
+                    <i data-feather="plus"></i>
+                  </button>
+                </div>
+              </ng-template>
             </label>
           </div>
         </div>
+      </div>
+
+      <div class="observacao-container">
+        <label class="observacao-label">Observações</label>
+        <textarea
+          class="observacao-textarea"
+          [(ngModel)]="observacoes"
+          placeholder="Ex: sem cebola, ponto da carne bem passado..."
+          rows="3"
+          maxlength="200"
+        ></textarea>
+        <span class="observacao-contador"
+          >{{ observacoes?.length ?? 0 }}/200</span
+        >
       </div>
     </div>
   </div>
@@ -84,7 +120,7 @@
 
 <div class="modal-footer">
   <div class="footer-quantidade">
-    <button [disabled]="quantidade == 1" class="btn-qtd" (click)="diminuir()">
+    <button [disabled]="quantidade === 1" class="btn-qtd" (click)="diminuir()">
       <i data-feather="minus"></i>
     </button>
     <span>{{ quantidade }}</span>

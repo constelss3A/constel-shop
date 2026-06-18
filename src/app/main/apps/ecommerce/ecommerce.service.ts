@@ -6,7 +6,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthenticationService } from 'app/auth/service';
 import { EComProduct } from './modelo/product';
 import { ApiService } from 'app/modulos/api.service';
-import { Cardapio } from './modelo/cardapio';
+import { Cardapio, CardapioItem } from './modelo/cardapio';
 import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
 import { Estabelecimento } from 'app/modulos/administrativo/estabelecimento/estabelecimento';
 import { Sacola, SacolaCliente, SacolaLinha } from './modelo/sacola';
@@ -353,6 +353,38 @@ export class EcommerceService implements Resolve<any> {
       }
       const maxValueId = Math.max(...this.cartList.map(cart => cart.id), 0) + 1;
       const cartRef = { id: maxValueId, productId: id, qty: 1 };
+      var cartId: any = '';
+
+      // If cart is not Empty
+      if (maxValueId !== 1) {
+        cartId = maxValueId;
+      }
+      this.onSacolaChange.next(this.sacola);
+      this._httpClient.post('api/ecommerce-userCart/' + cartId, { ...cartRef }).subscribe(response => {
+        this.getCartList();
+        resolve();
+      }, reject);
+    });
+  }
+
+  /**
+   * Add In Cart
+   *
+   * @param id
+   */
+  addComposicaoToCart(item: Item): Promise<void> {
+    // const item = this.getItem(id);
+    if (!item) {
+      return;
+    }
+    this.sacola.adiciona(item, item.quantidade);
+    return new Promise<void>((resolve, reject) => {
+      const product = this.productList.find(product => product.id === item.id);
+      if (product) {
+        product.isInCart = true;
+      }
+      const maxValueId = Math.max(...this.cartList.map(cart => cart.id), 0) + 1;
+      const cartRef = { id: maxValueId, productId: item.id, qty: item.quantidade };
       var cartId: any = '';
 
       // If cart is not Empty

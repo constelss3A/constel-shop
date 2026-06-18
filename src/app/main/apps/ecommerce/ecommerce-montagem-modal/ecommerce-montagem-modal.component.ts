@@ -1,7 +1,14 @@
 import { Component, Input, OnInit, ViewEncapsulation } from "@angular/core";
-import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
 
 import { EcommerceService } from "app/main/apps/ecommerce/ecommerce.service";
+import {
+  ComposicaoGrupo,
+  ComposicaoGrupoItem,
+  ComposicaoTipo,
+  Item,
+  ItemSituacao,
+} from "app/modulos/recurso/item/item";
+import { CardapioItem } from "../modelo/cardapio";
 
 @Component({
   selector: "app-ecommerce-montagem-modal",
@@ -11,601 +18,348 @@ import { EcommerceService } from "app/main/apps/ecommerce/ecommerce.service";
   host: { class: "ecommerce-application" },
 })
 export class EcommerceMontagemModalComponent implements OnInit {
-  // public
-  public product: any;
-  public wishlist: any;
-  public cartList: any;
-  public relatedProducts: any;
-  public totalFormatado: string = "R$ 0,00";
-  public itensSelecionadosMap: Map<any, any> = new Map();
+  @Input() modal: any;
+  @Input() item!: CardapioItem;
 
-  // Input Decorator
-  @Input()
-  modal: any;
+  public isLoading = true;
+  public produto: Item = new Item();
+  public observacoes: string = "";
+  public quantidade: number = 1;
 
-  // @Input()
-  // produto: any;
+  public itensSelecionadosMap: Map<ComposicaoGrupo, ComposicaoGrupoItem[]> =
+    new Map();
+  private quantidadeSelecionadaMap: Map<ComposicaoGrupoItem, number> =
+    new Map();
 
-  quantidade: number = 1;
+  private vendaItensComposicao: Item[] = [];
 
-  valorComposicao: number = 0.0;
+  get composicaoGrupoItens(): ComposicaoGrupoItem[] {
+    const result: ComposicaoGrupoItem[] = [];
+    this.itensSelecionadosMap.forEach((itens) => {
+      result.push(...itens);
+    });
+    return result;
+  }
 
-  produto: any = {
-    _id: "69ca6f02581bd04571f4bc9b",
-    id: "75a2d9da-7799-412c-9608-ef17b539963d",
-    __v: 0,
-    codigo: "0009",
-    composicaoGrupos: [
-      {
-        id: "c1d940c3-b8d1-419c-9d70-48dc5752a4f7",
-        inclusao: "2026-04-28T14:54:50.654Z",
-        edicao: "2026-04-28T14:54:50.654Z",
-        exclusao: null,
-        versao: 1,
-        situacao: 1,
-        nome: "Burger",
-        ordem: 1,
-        tipo: 10,
-        minimo: 0,
-        maximo: 2,
-        valor: 10,
-        composicaoGrupoItens: [
-          {
-            id: "5db7680c-9dda-43d7-841e-aee04b1d563f",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "646a3764-0fa1-4b6f-89ac-3e197088cf50",
-              codigo: "0001",
-              nome: "x - Burger",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: true,
-          },
-          {
-            id: "b0b8dd04-2ccf-4c58-996d-6136dff83f9c",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "1ce403e1-36cf-4a8b-83a3-81277d3258b9",
-              codigo: "0002",
-              nome: "Bacon Burger",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: true,
-          },
-          {
-            id: "63d972c1-0cc2-4edf-9ca5-e57795602a9b",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "bc65d32e-f025-4846-ac7a-f54175f2d3bc",
-              codigo: "0003",
-              nome: "Bacon Burger Duplo",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: true,
-          },
-          {
-            id: "04fc1288-8c70-4603-b11f-8989ea8e4e4c",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "eecfd7a3-f075-4d5a-8430-1365fb8f0c28",
-              codigo: "0014",
-              nome: "Bacon Burger Triplo",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: true,
-          },
-        ],
-      },
-      {
-        id: "8edd0ce5-4443-4067-9b74-a87b0dca9d4a",
-        inclusao: "2026-04-28T14:54:50.654Z",
-        edicao: "2026-04-28T14:54:50.654Z",
-        exclusao: null,
-        versao: 1,
-        situacao: 1,
-        nome: "Refrigerante",
-        ordem: 2,
-        tipo: 10,
-        minimo: 0,
-        maximo: 1,
-        valor: 20,
-        composicaoGrupoItens: [
-          {
-            id: "2e217ef1-4f68-469d-99bc-adf177127c7b",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "3be77e39-d35f-4e06-ad0f-3cf7beeb3693",
-              codigo: "4141",
-              nome: "Coca Cola",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: true,
-          },
-          {
-            id: "69cd9239-b0ec-4575-aef8-16a70ab8ae30",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "c5025642-105f-499b-be66-c3aead8a27da",
-              codigo: "0043",
-              nome: "Fanta Laranja",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: true,
-          },
-          {
-            id: "5bad9480-9039-426f-9c1b-8a834ba340fe",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "02d3b2ee-4e77-4423-a4b3-be5d2f759598",
-              codigo: "0044",
-              nome: "Fanta Uva",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: true,
-          },
-          {
-            id: "6419a4d0-590f-43fc-a46b-4b260e863c75",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "309b6095-faad-48ee-8b40-04af2d758b45",
-              codigo: "00040",
-              nome: "Guaraná Antarctica",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: true,
-          },
-        ],
-      },
-      {
-        id: "d21f4ab3-40d9-4708-a9fa-1b30d42921e3",
-        inclusao: "2026-04-28T14:54:50.654Z",
-        edicao: "2026-04-28T14:54:50.654Z",
-        exclusao: null,
-        versao: 1,
-        situacao: 1,
-        nome: "Fritas",
-        ordem: 3,
-        tipo: 10,
-        minimo: 0,
-        maximo: 1,
-        valor: 10,
-        composicaoGrupoItens: [
-          {
-            id: "1e979717-0fcb-49ae-b18e-735c3093997a",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "e846afdc-d2a6-4624-a950-674b434798e5",
-              codigo: "0008",
-              nome: "Batata Frita",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: true,
-          },
-          {
-            id: "2ca57494-fd76-43cf-95c4-0e1b1cd2217d",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "fe3ceb30-f784-4834-ae43-12da14ac53a7",
-              codigo: "105126",
-              nome: "Batata especial",
-            },
-            unidade: {
-              id: "6539cfa9-5869-4c0d-b368-be6e4f5fe886",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: false,
-          },
-        ],
-      },
-      {
-        id: "679e7fb0-8830-4e4a-98ab-8f3cc62dab13",
-        inclusao: "2026-04-28T14:54:50.654Z",
-        edicao: "2026-04-28T14:54:50.654Z",
-        exclusao: null,
-        versao: 1,
-        situacao: 1,
-        nome: "Sobremesa",
-        ordem: 4,
-        tipo: 20,
-        minimo: 0,
-        maximo: 1,
-        valor: 0,
-        composicaoGrupoItens: [
-          {
-            id: "41d2cd4f-9887-4943-b512-69000349e4f1",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "d3f605c9-ecd9-46e5-94f9-863441257554",
-              codigo: "0052",
-              nome: "Café Extra Forte",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 5,
-            imprimir: true,
-          },
-          {
-            id: "8b520f0c-224d-4385-95ae-c0cfab0843fe",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "40ae8226-682a-4317-a900-05e4fd701a1d",
-              codigo: "0050",
-              nome: "Café Suíço",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 13.99,
-            imprimir: true,
-          },
-        ],
-      },
-      {
-        id: "7e690ef7-d59d-49ae-8f9f-e68e2b91227a",
-        inclusao: "2026-04-28T14:54:50.654Z",
-        edicao: "2026-04-28T14:54:50.654Z",
-        exclusao: null,
-        versao: 1,
-        situacao: 1,
-        nome: "Suco",
-        ordem: 5,
-        tipo: 10,
-        minimo: 0,
-        maximo: 1,
-        valor: 2.99,
-        composicaoGrupoItens: [
-          {
-            id: "f2538c7e-8318-4d2e-95d0-e57fd4bbeb0c",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "21be66ad-672b-4485-8356-ffb7a6bcf6a1",
-              codigo: "0035",
-              nome: "Suco de Laranja",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: false,
-          },
-          {
-            id: "75394161-619d-4846-8ae2-6935edc7ad66",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "aa8e2b29-6c22-4472-be6b-54a8778f227e",
-              codigo: "0030",
-              nome: "Suco de Abacaxi",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: true,
-          },
-          {
-            id: "c2648f93-70f7-457d-9d92-f1f8ba494d38",
-            inclusao: "2026-04-28T14:54:50.654Z",
-            edicao: "2026-04-28T14:54:50.654Z",
-            exclusao: null,
-            versao: 1,
-            situacao: 1,
-            item: {
-              id: "e6916b85-5c02-4cf8-88ae-1820079502d4",
-              codigo: "105181",
-              nome: "Suco de Acerola",
-            },
-            unidade: {
-              id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-              codigo: "UN",
-              nome: "Unidade",
-            },
-            quantidade: 1,
-            quantidadeAtual: 0,
-            fator: 1,
-            valor: 0,
-            imprimir: false,
-          },
-        ],
-      },
-    ],
-    composicaoInsumos: [],
-    edicao: "2026-04-28T14:54:50.645Z",
-    exclusao: null,
-    fator: 1,
-    inclusao: "2023-05-08T00:51:26.408Z",
-    item: {
-      id: "cd78f2fa-c3c6-4fce-8cca-69504763142f",
-      imagem:
-        "https://s3.amazonaws.com/atlas.constel.cloud/files/79c3a27b-b045-44bb-ae60-68c6c3eb3fa8.png",
-      codigo: "0009",
-      nome: "Combo Durango",
-    },
-    situacao: 1,
-    tipo: 10,
-    unidade: {
-      id: "6b5ee198-de25-4d09-8e3e-09f0ea52d62c",
-      codigo: "UN",
-      nome: "Unidade",
-    },
-    versao: 42,
-  };
-
-  /**
-   * Constructor
-   *
-   * @param {EcommerceService} _ecommerceService
-   * @param {NgbModal} _modalService
-   */
   constructor(private _ecommerceService: EcommerceService) {}
 
-  // Public Methods
-  // -----------------------------------------------------------------------------------------------------
-
-  /**
-   * Add To Cart
-   *
-   * @param product
-   */
-  addToCart(product: any) {
-    this._ecommerceService.addToCart(product.id).then((res) => {
-      product.isInCart = true;
-    });
-  }
-
-  // Lifecycle Hooks
-  // -----------------------------------------------------------------------------------------------------
-
-  /**
-   * On init
-   */
   ngOnInit(): void {
-    // Subscribe to Selected Product change
-    // this._ecommerceService.onSelectedProductChange.subscribe(res => {
-    //   this.product = res;
-    // });
-
-    this.product = this._ecommerceService.getProduct();
-
-    // Subscribe to Wishlist change
-    this._ecommerceService.onWishlistChange.subscribe(
-      (res) => (this.wishlist = res),
-    );
-
-    // Subscribe to Cartlist change
-    this._ecommerceService.onCartListChange.subscribe(
-      (res) => (this.cartList = res),
-    );
-
-    // Get Related Products
-    this._ecommerceService.getRelatedProducts().then((response) => {
-      this.relatedProducts = response;
-    });
-
-    this.product.isInWishlist =
-      this.wishlist.findIndex((p: any) => p.productId === this.product.id) > -1;
-    this.product.isInCart =
-      this.cartList.findIndex((p: any) => p.productId === this.product.id) > -1;
+    this._ecommerceService
+      .getItemDetalhado(this.item.id)
+      .toPromise()
+      .then((item) => (this.produto = item))
+      .finally(() => (this.isLoading = false));
   }
 
-  adicionar() {}
+  get valorComposicao(): number {
+    const valorBase = this.produto?.valor ?? 0;
+    const valorAdicionais = this.composicaoGrupoItens.reduce(
+      (acc, cgi) => acc + cgi.valor * (cgi.quantidade ?? 1),
+      0,
+    );
+    return valorBase + valorAdicionais;
+  }
 
-  diminuir() {
-    if(this.quantidade > 1) {
-      this.quantidade--;
+  get totalFormatado(): string {
+    const total = this.valorComposicao * this.quantidade;
+    return `R$ ${total.toFixed(2).replace(".", ",")}`;
+  }
+
+  selecionadosNoGrupo(grupo: ComposicaoGrupo): number {
+    const itens = this.itensSelecionadosMap.get(grupo) ?? [];
+    return itens.reduce((acc, cgi) => {
+      const qtdUsuario = this.quantidadeSelecionadaMap.get(cgi) ?? 0;
+      return acc + cgi.quantidade * qtdUsuario;
+    }, 0);
+  }
+
+  isItemSelecionado(grupoItem: ComposicaoGrupoItem): boolean {
+    return (this.quantidadeSelecionadaMap.get(grupoItem) ?? 0) > 0;
+  }
+
+  getQuantidadeItem(grupoItem: ComposicaoGrupoItem): number {
+    return this.quantidadeSelecionadaMap.get(grupoItem) ?? 0;
+  }
+
+  getFatorGrupo(grupo: ComposicaoGrupo): number {
+    const fatores = new Set(grupo.composicaoGrupoItens.map(cgi => cgi.quantidade));
+    return fatores.size === 1 ? [...fatores][0] : 1;
+  }
+
+  getMinimoGrupo(grupo: ComposicaoGrupo): number {
+    return grupo.minimo / this.getFatorGrupo(grupo);
+  }
+
+  getMaximoGrupo(grupo: ComposicaoGrupo): number {
+    return grupo.maximo / this.getFatorGrupo(grupo);
+  }
+
+  usaStepperNoGrupo(grupo: ComposicaoGrupo): boolean {
+    return grupo.maximo > 1 || this.getFatorGrupo(grupo) % 1 !== 0;
+  }
+
+  toggleOpcao(grupo: ComposicaoGrupo, grupoItem: ComposicaoGrupoItem): void {
+    const itens = this.itensSelecionadosMap.get(grupo) ?? [];
+
+    if (this.isItemSelecionado(grupoItem)) {
+      this.quantidadeSelecionadaMap.delete(grupoItem);
+      const index = itens.indexOf(grupoItem);
+      if (index >= 0) itens.splice(index, 1);
+    } else {
+      const pesoAtual = this.selecionadosNoGrupo(grupo);
+      if (pesoAtual + grupoItem.quantidade <= grupo.maximo) {
+        this.quantidadeSelecionadaMap.set(grupoItem, 1);
+        if (!itens.includes(grupoItem)) itens.push(grupoItem);
+      }
+    }
+
+    this.itensSelecionadosMap.set(grupo, itens);
+  }
+
+  aumentarItem(grupo: ComposicaoGrupo, grupoItem: ComposicaoGrupoItem): void {
+    const pesoAtual = this.selecionadosNoGrupo(grupo);
+
+    // Verifica se ainda cabe mais uma unidade desse item
+    if (pesoAtual + grupoItem.quantidade > grupo.maximo) return;
+
+    const itens = this.itensSelecionadosMap.get(grupo) ?? [];
+    const qtdAtual = this.quantidadeSelecionadaMap.get(grupoItem) ?? 0;
+
+    this.quantidadeSelecionadaMap.set(grupoItem, qtdAtual + 1);
+    if (!itens.includes(grupoItem)) itens.push(grupoItem);
+
+    this.itensSelecionadosMap.set(grupo, itens);
+  }
+
+  diminuirItem(grupo: ComposicaoGrupo, grupoItem: ComposicaoGrupoItem): void {
+    const qtdAtual = this.quantidadeSelecionadaMap.get(grupoItem) ?? 0;
+    if (qtdAtual <= 0) return;
+
+    const novaQtd = qtdAtual - 1;
+    if (novaQtd <= 0) {
+      this.quantidadeSelecionadaMap.delete(grupoItem);
+      const itens = this.itensSelecionadosMap.get(grupo) ?? [];
+      const index = itens.indexOf(grupoItem);
+      if (index >= 0) itens.splice(index, 1);
+      this.itensSelecionadosMap.set(grupo, itens);
+    } else {
+      this.quantidadeSelecionadaMap.set(grupoItem, novaQtd);
     }
   }
 
-  aumentar() {
+  checarQuantidadeSelecionada(grupo: ComposicaoGrupo): boolean {
+    return this.selecionadosNoGrupo(grupo) >= grupo.maximo;
+  }
+
+  diminuir(): void {
+    if (this.quantidade > 1) this.quantidade--;
+  }
+
+  aumentar(): void {
     this.quantidade++;
   }
 
-  toggleOpcao(grupo: any, grupoItem: any) {
-    
-  }
-
-  diminuirItem(grupo: any, grupoItem: any) {
-    if (grupoItem.quantidadeAtual == 0) {
-      return;
+  async adicionar(): Promise<void> {
+    try {
+      await this.addComposicaoToCart();
+      this.modal.close({
+        quantidade: this.quantidade,
+        observacoes: this.observacoes,
+      });
+    } catch (error) {
+      console.error("Erro ao adicionar ao carrinho:", error);
     }
-    grupoItem.quantidadeAtual--;
-    this.itensSelecionadosMap.forEach((value: any, key: any) => {
-      if (value === grupo && key === grupoItem) {
-        key.quantidadeAtual--;
-      }
-    });
   }
 
-  aumentarItem(grupo: any, grupoItem: any) {
-    if (!this.itensSelecionadosMap.has(grupo)) {
-      grupoItem.quantidadeAtual++;
-      this.itensSelecionadosMap.set(grupo, [grupoItem]);
-    } else {
-      const itensSelecionados = this.itensSelecionadosMap.get(grupo);
-      const quantidadeSelecionada = itensSelecionados.reduce(
-        (acc: number, item: any) => acc + item.quantidadeAtual,
-        0,
+  async addComposicaoToCart(): Promise<void> {
+    const observacoes = this.observacoes.trim() || "";
+    const hasGrupoObrigatorio =
+      this.produto.composicao?.composicaoGrupos?.some((g) => g.minimo > 0) ??
+      false;
+
+    const itemPai: Item = {
+      ...this.produto,
+      quantidade: this.quantidade,
+      observacoes: observacoes,
+      montagemGrupo: 0,
+      // composicaoItens: [...this.composicaoGrupoItens],
+      // isItemComposicao: true,
+      // itemPai: null,
+    };
+
+    const temItens = this.composicaoGrupoItens.length > 0;
+    const semItensMasNaoObrigatorio =
+      this.composicaoGrupoItens.length === 0 && !hasGrupoObrigatorio;
+
+    if (temItens || semItensMasNaoObrigatorio) {
+      const montagemBloco = this.generateMontagemBloco();
+      itemPai.montagemBloco = montagemBloco;
+      itemPai.montagemTipo = ComposicaoTipo.Montagem;
+
+      await this.processItems(itemPai);
+
+      this._ecommerceService.addComposicaoToCart(itemPai).then();
+
+      for (const composicaoItem of this.vendaItensComposicao) {
+        composicaoItem.montagemBloco = montagemBloco;
+        this._ecommerceService.addComposicaoToCart(composicaoItem).then();
+      }
+    }
+  }
+
+  async processItems(selectedItem: Item): Promise<void> {
+    const composicaoItems = this.getComposicaoItems();
+
+    const vendaItems: any[] = composicaoItems.map((item: any) => ({
+      ...item,
+      itemPai: selectedItem,
+    }));
+
+    // selectedItem.subtotal = valor * quantidade (já vem assim do addComposicaoToCart)
+    // Delphi: Item.Subtotal = Arredonda(Item.Valor * Item.Quantidade)
+    // selectedItem.subtotal = (selectedItem.valor * this.quantidade).roundABNT(2);
+    // selectedItem.total = selectedItem.subtotal;
+    selectedItem.valor = (selectedItem.valor * this.quantidade).roundABNT(2);
+    // selectedItem.total = selectedItem.subtotal;
+
+    // Delphi: SubtotalOpcional = soma de SubItem.Valor onde MontagemGrupoTipo = OPCIONAL (10)
+
+    const subtotalOpcional = vendaItems
+      .filter((s) => s.montagemGrupoTipo === 10)
+      .reduce((t, s) => t + s.valor, 0)
+      .roundABNT(2);
+
+    let remanescente = 0.01;
+
+    for (const subItem of vendaItems) {
+      if (subItem.valor < 0)
+        throw new Error(
+          "Erro no rateio dos valores: valor do subitem não informado",
+        );
+
+      // Só rateia OPCIONAL (tipo 10)
+      if (subItem.montagemGrupoTipo !== 10) continue;
+
+      if (subItem.montagemGrupoValor > 0) {
+        // Delphi: se MontagemGrupoValor > 0, valor fixo do grupo
+        subItem.valor = subItem.montagemGrupoValor;
+      } else {
+        // Delphi: Trunca(SubItem.Valor * (Item.Valor / TotalOpcional) / SubItem.Quantidade, 2) - Remanescente
+        const divisor = subtotalOpcional > 0 ? subtotalOpcional : 1;
+        let novoValor =
+          (subItem.valor * (selectedItem.valor / divisor)) /
+          (subItem.quantidade ?? 1);
+        novoValor = novoValor.roundABNT(2) - remanescente;
+        subItem.valor = novoValor.roundABNT(2);
+        remanescente = 0;
+      }
+
+      subItem.subtotal = (subItem.valor * (subItem.quantidade ?? 1)).roundABNT(
+        2,
       );
+      subItem.total = subItem.subtotal;
 
-      if (quantidadeSelecionada < grupo.maximo) {
-        if (!itensSelecionados.includes(grupoItem)) {
-          grupoItem.quantidadeAtual++;
+      if (subItem.valor <= 0)
+        throw new Error(
+          "Erro no rateio dos valores: valor remanescente negativo",
+        );
+    }
 
-          itensSelecionados.push(grupoItem);
-        } else {
-          grupoItem.quantidadeAtual++;
-          this.itensSelecionadosMap.forEach((value: any, key: any) => {
-            if (value === grupo && key === grupoItem) {
-              key.quantidadeAtual++;
-            }
-          });
-        }
+    // Delphi: Subtotal = Item.Subtotal - soma dos SubItem.Subtotal onde OPCIONAL
+    // let subtotal = selectedItem.subtotal!;
+    let subtotal = selectedItem.valor!;
+    for (const sub of vendaItems) {
+      if (sub.montagemGrupoTipo === 10) {
+        subtotal = (subtotal - sub.subtotal).roundABNT(2);
       }
     }
+
+    // Delphi: Item.Valor = Trunca(Subtotal / Item.Quantidade)
+    selectedItem.valor = subtotal.roundABNT(2) / this.quantidade;
+    // selectedItem.subtotal = (selectedItem.valor * this.quantidade).roundABNT(2);
+    // selectedItem.total = selectedItem.subtotal;
+
+    if (selectedItem.valor <= 0) throw new Error("Erro no rateio dos valores");
+
+    this.vendaItensComposicao = vendaItems;
   }
 
-  checarQuantidadeSelecionada(grupo: any): boolean {
-    if(!this.itensSelecionadosMap.has(grupo)) {
-      return false;
+  getComposicaoItems(): any[] {
+    const grupos = this.produto?.composicao?.composicaoGrupos ?? [];
+    const items: any[] = [];
+    let globalIndex = 0;
+
+    for (const grupo of grupos) {
+      // Tipo OBSERVACAO (20 no Delphi = COMPOSICAOGRUPO_TIPO_OBSERVACAO) — pula
+      // Baseado no Delphi: só processa se tipo != OBSERVACAO e tem itens
+      if (grupo.composicaoGrupoItens.length === 0) {
+        globalIndex++;
+        continue;
+      }
+
+      for (const cgi of grupo.composicaoGrupoItens) {
+        const selecionados = this.itensSelecionadosMap.get(grupo) ?? [];
+
+        if (!selecionados.includes(cgi)) {
+          globalIndex++;
+          continue;
+        }
+
+        const qtdUsuario = this.quantidadeSelecionadaMap.get(cgi) ?? 1;
+        const quantidadeReal = cgi.quantidade * qtdUsuario;
+
+        // ADICIONAL (tipo 20): Valor = cgi.valor (valor do próprio item)
+        // OPCIONAL (tipo 10): se grupo.valor > 0 usa grupo.valor, senão busca preço do item
+        // MANDATORIO (tipo 30): Valor = 0
+        let valor = 0;
+        if (grupo.tipo === 20) {
+          // ADICIONAL — valor fixo do cgi
+          valor = cgi.valor;
+        } else if (grupo.tipo === 10) {
+          // OPCIONAL — valor do grupo se existir
+          valor = grupo.valor > 0 ? grupo.valor : cgi.valor;
+        } else {
+          // MANDATORIO ou outros — valor 0
+          valor = 0;
+        }
+
+        items.push({
+          id: cgi.item.id,
+          codigo: cgi.item.codigo,
+          // imagem: cgi.item.imagem,
+          nome: cgi.item.nome,
+          valor: valor,
+          quantidade: quantidadeReal,
+          quantidadeNova: quantidadeReal * this.quantidade,
+          composicaoGrupo: grupo,
+          montagemGrupoTipo: grupo.tipo,
+          montagemGrupoValor: grupo.valor,
+          montagemGrupo: grupo.ordem * 1000 + (globalIndex % 1000),
+          montagemTipo: 20, // ITEM_MONTAGEMTIPO_SUBITEM
+          // unidade: cgi.item.unidade ?? cgi.unidade,
+          // fracionamento: cgi.item.fracionamento ?? false,
+          // medida: cgi.item.medida,
+          subtotal: (valor * (quantidadeReal ?? 1)).roundABNT(2),
+          total: (valor * (quantidadeReal ?? 1)).roundABNT(2),
+          composicaoItens: [],
+          isItemComposicao: true,
+          itemPai: null, // será setado no processItems
+        });
+
+        globalIndex++;
+      }
     }
-    const itensSelecionados = this.itensSelecionadosMap.get(grupo);
-    const quantidadeSelecionada = itensSelecionados.reduce(
-      (acc: number, item: any) => acc + item.quantidadeAtual,
-      0,
-    );
-    return quantidadeSelecionada >= grupo.maximo;
+
+    return items;
+  }
+
+  generateMontagemBloco(): string {
+    const timestampUnix = Math.floor(Date.now() / 1000);
+    const guid = crypto
+      .randomUUID()
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .substring(0, 8)
+      .toUpperCase();
+    return `${timestampUnix}${guid}`;
   }
 }

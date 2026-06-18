@@ -1,8 +1,12 @@
 <li ngbDropdown class="nav-item dropdown-cart mr-25">
   <a class="nav-link" tabindex="0" ngbDropdownToggle id="navbarCartDropdown">
-    <span class="font-medium-3 font-weight-bolder mr-1">{{ sacola.total | currency: 'BRL' }}</span>
+    <span class="font-medium-3 font-weight-bolder mr-1">{{
+      sacola.total | currency: "BRL"
+    }}</span>
     <span [data-feather]="'shopping-bag'" [class]="'ficon'"></span>
-    <span class="badge badge-pill badge-primary badge-up cart-item-count">{{ sacola.quantidade || 0 }}</span></a
+    <span class="badge badge-pill badge-primary badge-up cart-item-count">{{
+      sacola.quantidade || 0
+    }}</span></a
   >
   <ul
     ngbDropdownMenu
@@ -13,7 +17,10 @@
     <li class="dropdown-menu-header">
       <div class="dropdown-header d-flex">
         <h4 class="notification-title mb-0 mr-auto">Minha Sacola</h4>
-        <div class="badge badge-pill badge-light-primary">{{ sacola.quantidade }} {{ sacola.quantidade === 1 ? 'Item' : 'Itens' }}</div>
+        <div class="badge badge-pill badge-light-primary">
+          {{ sacola.quantidade }}
+          {{ sacola.quantidade === 1 ? "Item" : "Itens" }}
+        </div>
       </div>
     </li>
     <!--/ Cart header -->
@@ -21,32 +28,71 @@
     <li class="scrollable-container media-list" [perfectScrollbar]>
       <ng-container *ngIf="!sacola.quantidade">
         <div class="media align-items-center">
-          <h6 class="text-center">A sacola está vazia, temos deliciosos itens esperando por você</h6>
+          <h6 class="text-center">
+            A sacola está vazia, temos deliciosos itens esperando por você
+          </h6>
         </div>
       </ng-container>
       <ng-container *ngIf="sacola.quantidade">
-        <ng-container *ngFor="let linha of sacola.linhas">
+        <ng-container *ngFor="let linha of sacola.linhasPrincipais">
           <div class="media align-items-center">
-            <img class="d-block rounded mr-1" [src]="linha.item.imagem" alt="item" width="62" />
+            <img
+              class="d-block rounded mr-1"
+              [src]="linha.item.imagem"
+              alt="item"
+              width="62"
+            />
             <div class="media-body">
               <button class="btn p-0" (click)="exclui(linha)">
                 <i class="ficon cart-item-remove" data-feather="x"></i>
               </button>
               <div class="media-heading">
                 <h6 class="cart-item-title">
-                  <a class="text-body" [routerLink]="'/apps/e-commerce/ecommerce-details/' + linha.item.id">{{
-                    linha.item.nome
-                  }}</a>
+                  <a
+                    class="text-body"
+                    [routerLink]="
+                      '/apps/e-commerce/ecommerce-details/' + linha.item.id
+                    "
+                    >{{ linha.item.nome }}</a
+                  >
                 </h6>
                 <!-- <small class="cart-item-by">{{ linha.marca }}</small> -->
+                <div *ngIf="linha.item.montagemTipo === 10">
+                  <div
+                    *ngFor="
+                      let linhaSubItem of sacola.getLinhasSubItens(
+                        linha.item.montagemBloco!
+                      )
+                    "
+                  >
+                    <div class="montagem-sub-item">
+                      {{ linhaSubItem.quantidade }} x
+                      {{ linhaSubItem.item.nome }}
+                      <div
+                        class="ml-2"
+                        *ngIf="linhaSubItem.item.montagemGrupoTipo === 20"
+                      >
+                        + {{ linhaSubItem.valor | currency: "BRL" }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="cart-item-qty">
                 <div class="input-group touchspin-cart">
-                  <core-touchspin [numberValue]="linha.quantidade" [stepValue]="1" [minValue]="-1" [maxValue]="10" (onChange)="quantidadeChange(linha, $event)">
+                  <core-touchspin
+                    [numberValue]="linha.quantidade"
+                    [stepValue]="1"
+                    [minValue]="-1"
+                    [maxValue]="10"
+                    (onChange)="quantidadeChange(linha, $event)"
+                  >
                   </core-touchspin>
                 </div>
               </div>
-              <h5 class="cart-item-price">{{ linha.total | currency: 'BRL' }}</h5>
+              <h5 class="cart-item-price">
+                {{ getTotalLinha(linha) | currency: "BRL" }}
+              </h5>
             </div>
           </div>
         </ng-container>
@@ -57,9 +103,16 @@
     <li class="dropdown-menu-footer">
       <div class="d-flex justify-content-between mb-1">
         <h6 class="font-weight-bolder mb-0">Total:</h6>
-        <h6 class="text-primary font-weight-bolder mb-0">{{ sacola.total | currency: 'BRL' }}</h6>
+        <h6 class="text-primary font-weight-bolder mb-0">
+          {{ sacola.total | currency: "BRL" }}
+        </h6>
       </div>
-      <a class="btn btn-primary btn-block" (click)="confirma()" *ngIf="sacola.total">Confirmar</a>
+      <a
+        class="btn btn-primary btn-block"
+        (click)="confirma()"
+        *ngIf="sacola.total"
+        >Confirmar</a
+      >
       <!-- <a class="btn btn-primary btn-block" routerLink="/apps/e-commerce/checkout" *ngIf="sacola.total">Finalizar</a> -->
     </li>
     <!--/ Cart footer -->

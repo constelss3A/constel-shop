@@ -39,4 +39,17 @@ export class NavbarCartComponent implements OnInit {
   confirma() {
     this._router.navigate(['/apps/e-commerce/checkout']);
   }
+
+  getTotalLinha(linha: SacolaLinha): number {
+    if(linha.item.montagemTipo === 10) {
+      return this.sacola.linhas.reduce((total, l) => {
+        if(l.item.montagemBloco === linha.item.montagemBloco) {
+          return total + l.total;
+        }
+        return total;
+      }, 0);
+    } else {
+      return linha.total;
+    }
+  }
 }

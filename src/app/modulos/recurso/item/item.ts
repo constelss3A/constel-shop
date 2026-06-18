@@ -18,10 +18,16 @@ export class Item extends BaseEmpresa {
   tipo = ItemTipo.Produto;
   valor: number;
   promocao: string;
-  montagem: boolean;
+  montagem: boolean = false;
   categoriaCodigo: string;
   alergenos: number[];
   composicao?: Composicao;
+  montagemBloco?: string;
+  montagemTipo?: ComposicaoTipo;
+  montagemGrupoTipo?: ComposicaoGrupoTipo;
+  montagemGrupo?: number;
+  quantidade:number = 1;
+  observacoes: string = "";
 }
 
 export enum ItemSituacao {

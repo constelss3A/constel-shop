@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation } from "@angular/core";
+import { Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from "@angular/core";
 
 import { EcommerceService } from "app/main/apps/ecommerce/ecommerce.service";
 import { Empresa } from "app/modulos/administrativo/empresa/empresa";
@@ -33,6 +33,10 @@ export class EcommerceShopComponent implements OnInit {
 
   public faixa: string;
   public avatar: string;
+
+  public itemSelecionado: CardapioItem | null = null;
+
+  @ViewChild('modalMontagem') modalMontagem!: TemplateRef<any>;
 
   /**
    *
@@ -139,9 +143,9 @@ export class EcommerceShopComponent implements OnInit {
 
   formataValor(valor: number) {
     valor ??= 0.0;
-    if (valor % 1 === 0) {
-      return "R$ " + valor.toFixed(0).replace(".", ",");
-    }
+    // if (valor % 1 === 0) {
+    //   return "R$ " + valor.toFixed(0).replace(".", ",");
+    // }
     return "R$ " + valor.toFixed(2).replace(".", ",");
   }
 
@@ -157,7 +161,14 @@ export class EcommerceShopComponent implements OnInit {
       .getItemDetalhado(item.id)
       .toPromise();
     console.log("itemDetalhado", itemDetalhado);
-    this._ecommerceService.addToCart(item.id).then();
+    itemDetalhado.then((detalhado) => {
+      if(detalhado.montagem) {
+        this.itemSelecionado = item;
+        this.modalMontagemOpen(item);
+      } else {
+        this._ecommerceService.addToCart(item.id).then();
+      }
+    });
   }
 
   /**
@@ -165,8 +176,9 @@ export class EcommerceShopComponent implements OnInit {
    * @param modalMontagem
    */
 
-  modalMontagemOpen(modalMontagem: any) {
-    this._modalService.open(modalMontagem, {
+  modalMontagemOpen(item: CardapioItem) {
+    this.itemSelecionado = item;
+    this._modalService.open(this.modalMontagem, {
       scrollable: true,
       centered: true,
       size: "lg",
