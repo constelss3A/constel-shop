@@ -54,7 +54,7 @@ export class EcommerceMontagemModalComponent implements OnInit {
   get valorComposicao(): number {
     const valorBase = this.produto?.valor ?? 0;
     const valorAdicionais = this.composicaoGrupoItens.reduce(
-      (acc, cgi) => acc + cgi.valor * (cgi.quantidade ?? 1),
+      (acc, cgi) => acc + cgi.valor * (cgi.quantidade != null && cgi.quantidade > 0 ? cgi.quantidade : 1),
       0,
     );
     return valorBase + valorAdicionais;
@@ -69,7 +69,7 @@ export class EcommerceMontagemModalComponent implements OnInit {
     const itens = this.itensSelecionadosMap.get(grupo) ?? [];
     return itens.reduce((acc, cgi) => {
       const qtdUsuario = this.quantidadeSelecionadaMap.get(cgi) ?? 0;
-      return acc + cgi.quantidade * qtdUsuario;
+      return acc + (cgi.quantidade > 0 ? cgi.quantidade : 1) * qtdUsuario;
     }, 0);
   }
 
@@ -82,7 +82,7 @@ export class EcommerceMontagemModalComponent implements OnInit {
   }
 
   getFatorGrupo(grupo: ComposicaoGrupo): number {
-    const fatores = new Set(grupo.composicaoGrupoItens.map(cgi => cgi.quantidade));
+    const fatores = new Set(grupo.composicaoGrupoItens.map(cgi => (cgi.quantidade > 0 ? cgi.quantidade : 1)));
     return fatores.size === 1 ? [...fatores][0] : 1;
   }
 
@@ -107,7 +107,7 @@ export class EcommerceMontagemModalComponent implements OnInit {
       if (index >= 0) itens.splice(index, 1);
     } else {
       const pesoAtual = this.selecionadosNoGrupo(grupo);
-      if (pesoAtual + grupoItem.quantidade <= grupo.maximo) {
+      if (pesoAtual + (grupoItem.quantidade > 0 ? grupoItem.quantidade : 1) <= grupo.maximo) {
         this.quantidadeSelecionadaMap.set(grupoItem, 1);
         if (!itens.includes(grupoItem)) itens.push(grupoItem);
       }
@@ -120,7 +120,7 @@ export class EcommerceMontagemModalComponent implements OnInit {
     const pesoAtual = this.selecionadosNoGrupo(grupo);
 
     // Verifica se ainda cabe mais uma unidade desse item
-    if (pesoAtual + grupoItem.quantidade > grupo.maximo) return;
+    if (pesoAtual + (grupoItem.quantidade > 0 ? grupoItem.quantidade : 1) > grupo.maximo) return;
 
     const itens = this.itensSelecionadosMap.get(grupo) ?? [];
     const qtdAtual = this.quantidadeSelecionadaMap.get(grupoItem) ?? 0;
@@ -248,13 +248,13 @@ export class EcommerceMontagemModalComponent implements OnInit {
         const divisor = subtotalOpcional > 0 ? subtotalOpcional : 1;
         let novoValor =
           (subItem.valor * (selectedItem.valor / divisor)) /
-          (subItem.quantidade ?? 1);
+          (subItem.quantidade > 0 ? subItem.quantidade : 1);
         novoValor = novoValor.roundABNT(2) - remanescente;
         subItem.valor = novoValor.roundABNT(2);
         remanescente = 0;
       }
 
-      subItem.subtotal = (subItem.valor * (subItem.quantidade ?? 1)).roundABNT(
+      subItem.subtotal = (subItem.valor * (subItem.quantidade > 0 ? subItem.quantidade : 1)).roundABNT(
         2,
       );
       subItem.total = subItem.subtotal;
@@ -306,7 +306,7 @@ export class EcommerceMontagemModalComponent implements OnInit {
         }
 
         const qtdUsuario = this.quantidadeSelecionadaMap.get(cgi) ?? 1;
-        const quantidadeReal = cgi.quantidade * qtdUsuario;
+        const quantidadeReal = (cgi.quantidade > 0 ? cgi.quantidade : 1) * qtdUsuario;
 
         // ADICIONAL (tipo 20): Valor = cgi.valor (valor do próprio item)
         // OPCIONAL (tipo 10): se grupo.valor > 0 usa grupo.valor, senão busca preço do item
