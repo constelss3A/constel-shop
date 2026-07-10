@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 import { AuthenticationService } from 'app/auth/service';
@@ -71,6 +71,7 @@ export class EcommerceService implements Resolve<any> {
     private _httpClient: HttpClient,
     private apiService: ApiService,
     private authService: AuthenticationService,
+    private _router: Router,
   ) {
     this.sacola = new Sacola();
     this.onEmpresaChange = new BehaviorSubject({});
@@ -495,7 +496,6 @@ export class EcommerceService implements Resolve<any> {
     //   ? `${pedido.pedidoCliente.nome} (${pedido.pedidoCliente.email})`
     //   : 'Anônimo';
     // alert(`Confirmando pedido de ${clienteInfo}\n${pedido.pedidoItens.length} item(ns) — Total: R$ ${pedido.total.toFixed(2)}`);
-    console.log('Pedido a enviar:', JSON.stringify(pedido, null, 2));
     this.apiService.grava<Pedido>(`aps://integracao/pedido/grava`, pedido, {
       'empresa-id': this.empresa.id,
       'empresa-nome': this.empresa.nome,
@@ -503,7 +503,18 @@ export class EcommerceService implements Resolve<any> {
       'estabelecimento-nome': this.estabelecimento.nome,
     }).subscribe(() => {
       this.sacola.inicia();
-      this.apiService.exibeSucesso('Pedido enviado');
+      this.apiService.exibeSucesso('Pedido enviado', 2500);
+      setTimeout(() => {
+        this.apiService.limpaMensagens();
+        this.voltarParaCardapio();
+      }, 2500);
     });
+  }
+
+  voltarParaCardapio() {
+    if (!this.empresa || !this.estabelecimento || !this.localizador) {
+      return;
+    }
+    this._router.navigate([`/apps/e-commerce/shop/${this.empresa.id}/${this.estabelecimento.id}/${this.localizador.id}`]);
   }
 }

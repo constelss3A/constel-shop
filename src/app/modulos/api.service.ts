@@ -554,11 +554,16 @@ export class ApiService {
       'Sucesso',
       {
         toastClass: 'toast ngx-toastr',
+        positionClass: 'toast-top-center',
         timeOut: timeOut,
         progressBar: true,
         closeButton: true,
       }
     );
+  }
+
+  limpaMensagens() {
+    this.toastr.clear();
   }
 
   exibeErro(mensagem: string) {
