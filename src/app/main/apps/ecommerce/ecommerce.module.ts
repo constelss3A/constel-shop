@@ -83,8 +83,9 @@ const routes: Routes = [
     data: { animation: 'EcommerceDetailsComponent' }
   },
   {
-    path: 'config-taxa-entrega',
+    path: 'config-taxa-entrega/:empresaid/:estabelecimentoid',
     component: EcommerceConfigTaxaComponent,
+    resolve: { ecommerce: EcommerceService },
     data: { animation: 'EcommerceConfigTaxaComponent' },
   },
 ];

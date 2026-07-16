@@ -9,38 +9,34 @@
           <div class="config-taxa-head">
             <div class="config-taxa-head-icon"><i class="feather icon-briefcase"></i></div>
             <div>
-              <h4 class="mb-0">Estabelecimento</h4>
-              <small class="text-muted">Carregue a loja para editar a taxa de entrega dela</small>
+              <h4 class="mb-0">{{ empresaNome || 'Estabelecimento' }}</h4>
+              <small class="text-muted" *ngIf="estabelecimentoEndereco">
+                As entregas saem de {{ estabelecimentoEndereco }}
+              </small>
+              <small class="text-muted" *ngIf="!estabelecimentoEndereco">
+                Taxa de entrega desta loja
+              </small>
             </div>
           </div>
 
-          <div class="row align-items-end">
-            <div class="col-12 col-lg-5 mb-1 mb-lg-0">
-              <label class="form-label">Empresa (id)</label>
-              <div class="input-group">
-                <div class="input-group-prepend"><span class="input-group-text"><i class="feather icon-home"></i></span></div>
-                <input type="text" class="form-control" placeholder="id da empresa"
-                  [(ngModel)]="empresaId" [ngModelOptions]="{ standalone: true }" (ngModelChange)="carregado = false" />
-              </div>
-            </div>
-            <div class="col-12 col-lg-5 mb-1 mb-lg-0">
-              <label class="form-label">Estabelecimento (id)</label>
-              <div class="input-group">
-                <div class="input-group-prepend"><span class="input-group-text"><i class="feather icon-map-pin"></i></span></div>
-                <input type="text" class="form-control" placeholder="id do estabelecimento"
-                  [(ngModel)]="estabelecimentoId" [ngModelOptions]="{ standalone: true }" (ngModelChange)="carregado = false" />
-              </div>
-            </div>
-            <div class="col-12 col-lg-2">
-              <button type="button" class="btn btn-primary btn-block" (click)="carrega()" rippleEffect>
-                <i class="feather icon-download-cloud mr-50"></i>Carregar
-              </button>
-            </div>
+          <div class="config-taxa-loaded mt-1" *ngIf="semContexto">
+            <i class="feather icon-alert-triangle mr-50"></i>
+            Nenhuma loja no contexto. Abra esta tela a partir de um estabelecimento.
           </div>
 
           <div class="config-taxa-loaded mt-1" *ngIf="carregado">
             <i class="feather icon-check-circle mr-50"></i>
-            Configuracao carregada. Tipo atual: <span class="font-weight-bolder ml-25">{{ tipoLabel }}</span>
+            Tipo atual: <span class="font-weight-bolder ml-25">{{ tipoLabel }}</span>
+          </div>
+
+          <div class="config-taxa-loaded mt-50" *ngIf="carregado && origemBuscando">
+            <i class="feather icon-loader mr-50"></i>
+            Localizando o endereco da loja no mapa...
+          </div>
+
+          <div class="config-taxa-loaded mt-50 text-warning" *ngIf="carregado && origemNaoLocalizada">
+            <i class="feather icon-alert-triangle mr-50"></i>
+            Nao foi possivel localizar o endereco da loja no mapa. Arraste o pino ate ela antes de salvar.
           </div>
         </div>
       </div>

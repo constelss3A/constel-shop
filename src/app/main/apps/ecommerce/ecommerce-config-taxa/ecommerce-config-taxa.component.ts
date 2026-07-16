@@ -23,10 +23,13 @@ export class EcommerceConfigTaxaComponent implements OnInit, AfterViewInit, OnDe
   public contentHeader: object;
   public TaxaTipo = TaxaTipo;
   public TaxaArredondamento = TaxaArredondamento;
-  public empresaId = '';
-  public estabelecimentoId = '';
   public carregado = false;
   public config: TaxaEntregaConfig = taxaEntregaConfigPadrao();
+  public empresaNome = '';
+  public estabelecimentoEndereco = '';
+  public origemBuscando = false;
+  public origemNaoLocalizada = false;
+  public semContexto = false;
 
   public tipos = [
     { tipo: TaxaTipo.Fixo, nome: 'Fixo', icone: 'icon-tag', descricao: 'Valor unico para toda a area de entrega' },
@@ -69,6 +72,7 @@ export class EcommerceConfigTaxaComponent implements OnInit, AfterViewInit, OnDe
         ],
       },
     };
+    this.carrega();
   }
 
   ngAfterViewInit(): void {}
@@ -77,12 +81,16 @@ export class EcommerceConfigTaxaComponent implements OnInit, AfterViewInit, OnDe
     if (this.mapa) { this.mapa.remove(); }
   }
 
-  carrega(): void {
-    if (!this.empresaId || !this.estabelecimentoId) {
-      this._apiService.exibeErro('Informe empresa e estabelecimento');
+  // Contexto vem da rota (config-taxa-entrega/:empresaid/:estabelecimentoid), igual ao shop.
+  // O resolver do EcommerceService ja carregou empresa e estabelecimento antes desta tela
+  // existir - nao ha id para digitar. Quando esta tela migrar para a retaguarda, o contexto
+  // passa a vir da sessao de la; o resto continua igual.
+  private carrega(): void {
+    if (!this._ecommerceService.estabelecimento) {
+      this.semContexto = true;
       return;
     }
-    this._ecommerceService.contextoDefine(this.empresaId, this.estabelecimentoId);
+    const jaSalva = this._ecommerceService.taxaEntregaConfigExiste();
     const raw = this._ecommerceService.taxaEntregaConfigCarrega();
     this.config = {
       ...raw,
@@ -91,8 +99,39 @@ export class EcommerceConfigTaxaComponent implements OnInit, AfterViewInit, OnDe
       faixasDinamica: raw.faixasDinamica.map(f => ({ ...f })),
       bairros: raw.bairros.map(b => ({ ...b, poligono: b.poligono.map(p => ({ ...p })) })),
     };
+    this.empresaNome = this._ecommerceService.empresa?.nome || '';
+    this.estabelecimentoEndereco = this._ecommerceService.estabelecimentoEnderecoTexto();
     this.carregado = true;
     setTimeout(() => this.mapaInicia(), 0);
+    if (!jaSalva) {
+      this.origemBusca();
+    }
+  }
+
+  // Posiciona o pino no endereco da loja. So roda quando a config nunca foi salva: se o
+  // lojista ja largou o pino em algum lugar, a coordenada dele vale mais que o palpite do
+  // geocoder e nao pode ser sobrescrita.
+  private origemBusca(): void {
+    this.origemBuscando = true;
+    this._ecommerceService.estabelecimentoOrigemObtem().subscribe(coord => {
+      this.origemBuscando = false;
+      if (!coord) {
+        this.origemNaoLocalizada = true;
+        return;
+      }
+      this.origemAplica(coord);
+    });
+  }
+
+  private origemAplica(origem: { latitude: number; longitude: number }): void {
+    this.config.origem = { ...origem };
+    if (this.origemMarker) {
+      this.origemMarker.setLatLng([origem.latitude, origem.longitude]);
+    }
+    if (this.mapa) {
+      this.mapa.setView([origem.latitude, origem.longitude], 14);
+    }
+    this.aneisAtualiza();
   }
 
   selecionaTipo(tipo: TaxaTipo): void {
