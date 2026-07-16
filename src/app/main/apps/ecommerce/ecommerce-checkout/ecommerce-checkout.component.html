@@ -80,7 +80,8 @@
               <label>CEP</label>
               <div class="input-group">
                 <input type="text" class="form-control" placeholder="00000-000" maxlength="9"
-                  [(ngModel)]="enderecoForm.cep" [ngModelOptions]="{ standalone: true }"
+                  inputmode="numeric" [ngModel]="enderecoForm.cep" [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="cepMuda($event)"
                   (blur)="cepBusca()" (keydown.enter)="cepBusca(true)" />
                 <div class="input-group-append">
                   <button type="button" class="btn btn-outline-primary" (click)="cepBusca(true)" [disabled]="cepBuscando" rippleEffect>
@@ -139,13 +140,38 @@
         <div class="card-body">
           <label class="section-label mb-1">Forma de pagamento</label>
           <hr />
-          <div class="d-flex flex-wrap">
-            <label *ngFor="let forma of formasPagamento"
-              class="btn btn-outline-primary mr-1 mb-1"
-              [class.active]="formaPagamento?.forma === forma.forma"
-              (click)="selecionaPagamento(forma)" rippleEffect>
-              {{ forma.nome }}
-            </label>
+          <div class="pagamento-lista">
+            <ng-container *ngFor="let forma of formasPagamento">
+              <label class="pagamento-opcao" [class.ativa]="formaPagamento?.forma === forma.forma">
+                <input type="radio" name="formaPagamento" class="pagamento-radio"
+                  [value]="forma.forma" [checked]="formaPagamento?.forma === forma.forma"
+                  (change)="selecionaPagamento(forma)" />
+                <i class="feather mr-1" [ngClass]="pagamentoIcone(forma.forma)"></i>
+                <span>{{ forma.nome }}</span>
+              </label>
+
+              <!-- Troco: uma linha so, aninhada no Dinheiro e visivel so quando ele esta escolhido -->
+              <div class="pagamento-troco" *ngIf="forma.forma === FormaPagamento.Dinheiro && isDinheiro">
+                <div class="troco-linha">
+                  <label class="troco-rotulo" for="trocoPara" [class.inativo]="!trocoNecessario">
+                    Troco para R$
+                  </label>
+                  <input id="trocoPara" type="number" class="form-control troco-campo"
+                    min="0" step="0.01" placeholder="0,00" [disabled]="!trocoNecessario"
+                    [(ngModel)]="trocoPara" [ngModelOptions]="{ standalone: true }" />
+                  <label class="troco-nao">
+                    <input type="checkbox" [checked]="!trocoNecessario" (change)="trocoNaoPrecisaMuda($event)" />
+                    <span>Não preciso, tenho o valor exato</span>
+                  </label>
+                </div>
+                <small class="troco-aviso text-success" *ngIf="trocoExibido">
+                  Levar {{ troco.troco | currency: 'BRL' }} de troco
+                </small>
+                <small class="troco-aviso text-danger" *ngIf="trocoInsuficiente">
+                  Precisa ser maior que o total ({{ total | currency: 'BRL' }})
+                </small>
+              </div>
+            </ng-container>
           </div>
         </div>
       </div>

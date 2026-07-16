@@ -1,12 +1,12 @@
 import { AfterViewInit, Component, NgZone, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, map, takeUntil } from 'rxjs/operators';
 
 import { EcommerceService } from 'app/main/apps/ecommerce/ecommerce.service';
 import { AuthenticationService } from 'app/auth/service';
 import { ApiService } from 'app/modulos/api.service';
-import { Endereco } from 'app/modulos/venda/entrega/endereco';
-import { EntregaTipo, FormaPagamento } from 'app/modulos/movimento/pagamento/pagamento';
+import { Endereco, cepDigitos, cepFormata, cepValido } from 'app/modulos/venda/entrega/endereco';
+import { EntregaTipo, FormaPagamento, TrocoMotivo, TrocoResultado, trocoCalcula } from 'app/modulos/movimento/pagamento/pagamento';
 import { Sacola, SacolaLinha } from '../modelo/sacola';
 import { Router } from '@angular/router';
 
@@ -42,9 +42,14 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
     { forma: FormaPagamento.Dinheiro, nome: 'Dinheiro' },
   ];
   public formaPagamento: { forma: number; nome: string } = null;
+  public FormaPagamento = FormaPagamento;
+  public trocoNecessario = false;
+  public trocoPara: number = null;
 
   private _unsubscribeAll = new Subject<void>();
   private googleReady = false;
+  private cepDigitado = new Subject<string>();
+  private cepBuscado = '';
 
   constructor(
     private _ecommerceService: EcommerceService,
@@ -56,6 +61,17 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
 
   ngOnInit(): void {
     this.isDelivery = this._ecommerceService.isDelivery;
+
+    // Busca automatica: espera parar de digitar, e so vai quando o CEP esta completo.
+    this.cepDigitado
+      .pipe(
+        map(cep => cepDigitos(cep)),
+        filter(cep => cepValido(cep)),
+        debounceTime(500),
+        distinctUntilChanged(),
+        takeUntil(this._unsubscribeAll),
+      )
+      .subscribe(() => this.cepBusca());
 
     this._ecommerceService.onSacolaChange
       .pipe(takeUntil(this._unsubscribeAll))
@@ -151,6 +167,55 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
 
   selecionaPagamento(forma: { forma: number; nome: string }) {
     this.formaPagamento = forma;
+    if (this.isDinheiro) {
+      // Entra pedindo o valor, com o campo aberto. Quem tem o trocado marca "Nao preciso" -
+      // e um ato, nao um campo vazio que a gente interpreta.
+      this.trocoNecessario = true;
+      return;
+    }
+    // Sair do dinheiro zera o troco. Sem isto, escolher Dinheiro, informar R$ 100 e depois
+    // trocar para Pix mandaria o pedido com um troco fantasma de uma escolha abandonada.
+    this.trocoNecessario = false;
+    this.trocoPara = null;
+  }
+
+  trocoNaoPrecisaMuda(evento: Event) {
+    this.trocoNecessarioDefine(!(evento.target as HTMLInputElement).checked);
+  }
+
+  get isDinheiro(): boolean {
+    return this.formaPagamento?.forma === FormaPagamento.Dinheiro;
+  }
+
+  pagamentoIcone(forma: number): string {
+    switch (forma) {
+      case FormaPagamento.Pix: return 'icon-zap';
+      case FormaPagamento.CartaoCredito: return 'icon-credit-card';
+      case FormaPagamento.CartaoDebito: return 'icon-credit-card';
+      case FormaPagamento.Dinheiro: return 'icon-dollar-sign';
+      default: return 'icon-circle';
+    }
+  }
+
+  trocoNecessarioDefine(necessario: boolean) {
+    this.trocoNecessario = necessario;
+    if (!necessario) {
+      this.trocoPara = null;
+    }
+  }
+
+  // Estado do troco recalculado a cada render: o total muda quando o frete muda, entao o
+  // valor que cobria o pedido pode deixar de cobrir sem o cliente ter tocado no campo.
+  get troco(): TrocoResultado {
+    return trocoCalcula(this.trocoPara, this.total);
+  }
+
+  get trocoInsuficiente(): boolean {
+    return this.trocoNecessario && this.troco.motivo === TrocoMotivo.Insuficiente;
+  }
+
+  get trocoExibido(): boolean {
+    return this.trocoNecessario && this.troco.valido;
   }
 
   finalizar() {
@@ -168,10 +233,19 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
         this._apiService.exibeErro('Selecione a forma de pagamento');
         return;
       }
+      if (this.isDinheiro && this.trocoNecessario && !this.troco.valido) {
+        this._apiService.exibeErro(
+          this.troco.motivo === TrocoMotivo.Insuficiente
+            ? 'O valor do troco precisa ser maior que o total do pedido'
+            : 'Informe para quanto precisa de troco'
+        );
+        return;
+      }
       this._ecommerceService.confirma({
         entregaTipo: this.entregaTipo,
         formaPagamento: this.formaPagamento,
         frete: this.freteExibido,
+        trocoPara: this.isDinheiro && this.trocoNecessario ? this.trocoPara : null,
       });
       return;
     }
@@ -206,18 +280,33 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
     this.enderecoEdicao = false;
   }
 
+  // Aplica a mascara a cada tecla e, quando o CEP fecha oito digitos, busca sozinho.
+  // O debounce existe porque colar ou digitar rapido dispara varias vezes seguidas, e o
+  // ViaCEP e chamado direto do navegador do cliente - nao vale gastar requisicao a toa.
+  cepMuda(valor: string): void {
+    this.enderecoForm.cep = cepFormata(valor);
+    this.cepDigitado.next(this.enderecoForm.cep);
+  }
+
   cepBusca(avisar: boolean = false) {
-    const cep = (this.enderecoForm.cep || '').replace(/\D/g, '');
-    if (cep.length !== 8) {
+    const cep = cepDigitos(this.enderecoForm.cep);
+    if (!cepValido(cep)) {
       if (avisar) {
         this._apiService.exibeErro('CEP deve ter 8 digitos');
       }
       return;
     }
+    // Ja buscado e preenchido: nao repete a chamada quando o campo perde o foco depois da
+    // busca automatica ter rodado.
+    if (cep === this.cepBuscado) {
+      return;
+    }
+    this.cepBuscado = cep;
     this.cepBuscando = true;
     this._ecommerceService.enderecoBuscaCep(cep).subscribe(dado => {
       this.cepBuscando = false;
       if (!dado) {
+        this.cepBuscado = '';
         this._apiService.exibeInformacao('CEP nao encontrado');
         return;
       }
