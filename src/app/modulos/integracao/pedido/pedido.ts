@@ -33,6 +33,9 @@ export class Pedido {
   pagamento: {
     forma: number;
     nome: string;
+    // Valor com que o cliente vai pagar em dinheiro. Ausente = valor exato, sem troco.
+    // O entregador depende disto para sair com troco - ver PEDIDO-ENDPOINTS-TAXA-ENTREGA.md.
+    trocoPara?: number;
   };
   referencia: string;
   modelo: PedidoModelo;
