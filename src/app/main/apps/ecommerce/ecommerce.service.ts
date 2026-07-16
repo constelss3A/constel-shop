@@ -2,14 +2,16 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, concatMap, map, tap } from 'rxjs/operators';
 
 import { AuthenticationService } from 'app/auth/service';
 import { EComProduct } from './modelo/product';
 import { ApiService } from 'app/modulos/api.service';
 import { Cardapio } from './modelo/cardapio';
 import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
-import { Estabelecimento } from 'app/modulos/administrativo/estabelecimento/estabelecimento';
+import {
+  Estabelecimento, estabelecimentoEnderecoOrigem, estabelecimentoEnderecoQueries,
+} from 'app/modulos/administrativo/estabelecimento/estabelecimento';
 import { Sacola, SacolaCliente, SacolaLinha } from './modelo/sacola';
 import { Localizador } from 'app/modulos/venda/localizador/localizador';
 import { Pedido, PedidoModelo, PedidoTipo } from 'app/modulos/integracao/pedido/pedido';
@@ -148,12 +150,90 @@ export class EcommerceService implements Resolve<any> {
       return Promise.resolve({ ok: false });
     }
     return new Promise((resolve, reject) => {
-      this.apiService.encontra<Empresa>(`aps://integracao/cardapio/estabelecimento/${this.estabelecimentoId}`, '').subscribe((estabelecimento: Estabelecimento) => {
+      this.apiService.encontra<Estabelecimento>(`aps://integracao/cardapio/estabelecimento/${this.estabelecimentoId}`, '').subscribe((estabelecimento: Estabelecimento) => {
         this.estabelecimento = estabelecimento;
         this.onEstabelecimentoChange.next(estabelecimento);
+        this.estabelecimentoOrigemCarrega();
         resolve({ ok: true });
       }, reject);
     });
+  }
+
+  // A origem do frete e o endereco de entrega do proprio estabelecimento, que ja vem no
+  // payload do cardapio. Geocodifica uma vez e guarda - o endereco da loja nao muda.
+  // Assincrono de proposito: nao segura a abertura do shop. Quando a coordenada chega,
+  // o frete e recalculado sozinho.
+  estabelecimentoOrigemCarrega(): void {
+    this.estabelecimentoOrigemObtem().subscribe(coord => {
+      if (coord) {
+        this.origemAplica(coord);
+      }
+    });
+  }
+
+  // Coordenada do endereco do estabelecimento, geocodificada e guardada. Nao aplica em lugar
+  // nenhum - quem chama decide. A tela de config usa isto para posicionar o pino; o shop usa
+  // para calcular o frete.
+  estabelecimentoOrigemObtem(): Observable<Coordenada | null> {
+    const queries = estabelecimentoEnderecoQueries(estabelecimentoEnderecoOrigem(this.estabelecimento));
+    if (!queries.length) {
+      return of(null);
+    }
+    const cache = this.apiService.getStorageData('delivery', this.origemChave());
+    if (cache) {
+      return of(cache as Coordenada);
+    }
+    return this.geocodificaPrimeira(queries).pipe(
+      tap(coord => {
+        if (coord) {
+          this.apiService.setStorageData('delivery', this.origemChave(), coord);
+        }
+      }),
+    );
+  }
+
+  // Endereco do estabelecimento em texto, para a tela de config mostrar de onde sai a entrega.
+  estabelecimentoEnderecoTexto(): string {
+    const endereco = estabelecimentoEnderecoOrigem(this.estabelecimento);
+    if (!endereco) {
+      return '';
+    }
+    const numero = endereco.numero ? `, ${endereco.numero}` : '';
+    const partes = [
+      `${endereco.logradouro || ''}${numero}`,
+      endereco.bairro,
+      [endereco.municipio?.nome, endereco.uf?.sigla].filter(Boolean).join('/'),
+    ];
+    return partes.filter(p => p && p.trim()).join(' - ');
+  }
+
+  // A config ja foi salva alguma vez para este estabelecimento? Quando nao foi, a tela de
+  // config pode posicionar o pino sozinha; quando foi, o pino do lojista manda.
+  taxaEntregaConfigExiste(): boolean {
+    return !!this.apiService.getStorageData('delivery', this.taxaChave());
+  }
+
+  // Tenta as buscas em ordem e para na primeira que responder. Sequencial de proposito:
+  // o Nominatim aceita 1 req/s, e isto roda uma vez por estabelecimento (depois vem do cache).
+  private geocodificaPrimeira(queries: string[]): Observable<Coordenada | null> {
+    if (!queries.length) {
+      return of(null);
+    }
+    const [primeira, ...resto] = queries;
+    return this.geocodifica(primeira).pipe(
+      concatMap(coord => (coord ? of(coord) : this.geocodificaPrimeira(resto))),
+    );
+  }
+
+  private origemChave(): string {
+    return `geo.origem.${this.estabelecimentoId}`;
+  }
+
+  private origemAplica(origem: Coordenada): void {
+    const config = this.taxaConfig || this.taxaEntregaConfigCarrega();
+    config.origem = origem;
+    this.onTaxaConfigChange.next(config);
+    this.freteRecalcula();
   }
 
   getLocalizador(): Promise<{ ok: boolean }> {
@@ -241,17 +321,37 @@ export class EcommerceService implements Resolve<any> {
     }
     const q = [endereco.logradouro, endereco.numero, endereco.bairro, endereco.cidade, endereco.uf, 'Brasil']
       .filter(Boolean).join(', ');
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`;
-    return this._httpClient.get<any[]>(url).pipe(
-      map(res => {
-        if (res && res.length) {
-          const coord: Coordenada = { latitude: parseFloat(res[0].lat), longitude: parseFloat(res[0].lon) };
-          this.apiService.setStorageData('delivery', cacheChave, coord);
-          return coord;
+    return this.geocodifica(q).pipe(
+      map(coord => {
+        if (!coord) {
+          return this.geocodificaMock(endereco);
         }
-        return this.geocodificaMock(endereco);
+        this.apiService.setStorageData('delivery', cacheChave, coord);
+        return coord;
       }),
-      catchError(() => of(this.geocodificaMock(endereco))),
+    );
+  }
+
+  // Geocodificacao crua, sem cache e sem invencao: devolve null quando o provedor nao
+  // souber responder. Cada chamador decide o que fazer com o null.
+  //
+  // Photon, nao Nominatim. Os dois leem o mesmo OpenStreetMap, mas o Nominatim nao encontra
+  // nossos enderecos reais - nem "Rua Tiburcio Cavalcanti, 2579, Fortaleza" (a rua esta no
+  // OSM grafada "Cavalcante"), nem "Quadra SQN 308 Bloco C, Brasilia" (o bloco esta la).
+  // O Photon acha os dois: o dado sempre esteve no OSM, o buscador do Nominatim e que nao
+  // chegava nele. Verificado ao vivo contra as duas unidades em 2026-07-16.
+  //
+  // Cuidado ao mexer na busca: sem bairro e UF, o Photon casa nome de rua igual em outro
+  // estado (o mesmo "Rua Tiburcio Cavalcanti" existe no Parana, 2.000 km fora) e devolve
+  // sem sinal de erro. As buscas montadas aqui sempre levam regiao junto.
+  private geocodifica(query: string): Observable<Coordenada | null> {
+    const url = `https://photon.komoot.io/api/?limit=1&q=${encodeURIComponent(query)}`;
+    return this._httpClient.get<any>(url).pipe(
+      map(res => {
+        const ponto = res?.features?.[0]?.geometry?.coordinates;
+        return ponto ? { latitude: ponto[1], longitude: ponto[0] } : null;
+      }),
+      catchError(() => of(null)),
     );
   }
 
@@ -570,7 +670,12 @@ export class EcommerceService implements Resolve<any> {
     });
   }
 
-  confirma(opcoes: { entregaTipo?: number; formaPagamento?: { forma: number; nome: string }; frete?: number } = {}) {
+  confirma(opcoes: {
+    entregaTipo?: number;
+    formaPagamento?: { forma: number; nome: string };
+    frete?: number;
+    trocoPara?: number;
+  } = {}) {
     const pedido = new Pedido();
     pedido.tipo = PedidoTipo.Autoatendimento;
     pedido.empresa = {
@@ -617,6 +722,11 @@ export class EcommerceService implements Resolve<any> {
         forma: opcoes.formaPagamento.forma,
         nome: opcoes.formaPagamento.nome,
       };
+      // So vai quando ha troco a levar. Sem isto o pedido carregaria trocoPara: null em
+      // toda compra no Pix, e o backend teria que adivinhar o que fazer com isso.
+      if (opcoes.trocoPara > 0) {
+        pedido.pagamento.trocoPara = opcoes.trocoPara;
+      }
     }
     const user = this.authService.currentUserValue;
     if (user) {
