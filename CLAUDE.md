@@ -24,9 +24,13 @@ Nada de alteracoes silenciosas. Tarefas com varios passos: narre passo a passo.
 - NAO usar emoji em nada (codigo, comentarios, UI textual, commits).
 - NUNCA fazer commit com assinatura, co-author ou mencao a "Claude"/"AI"/"Generated with".
   Mensagem de commit limpa, no padrao do repo.
-- Fase atual e mockada: nao ha acesso ao backend. Mocks isolados e com a MESMA assinatura
-  que a chamada real tera depois (retornando Observable/Promise), para a troca por API ser
-  uma alteracao localizada, sem mexer na UI.
+- Ha acesso ao backend real (sirius-s), e delivery esta EM PRODUCAO gravando pedido. O que
+  ainda e mock: a config de taxa e o endereco do cliente, ambos em `localStorage`. Mocks
+  isolados e com a MESMA assinatura da chamada real (retornando Observable/Promise), para a
+  troca por API ser localizada, sem mexer na UI.
+- O ambiente (constel.shop / sirius-s) e de TESTE: pode criar pedido de verdade para
+  investigar. Sondar o `pedido/grava` e legitimo - as mensagens de validacao do backend
+  entregam o schema campo a campo, e um 400 nao cria nada.
 - Seguir o padrao do projeto: mesma forma de criar classes/objetos, mesma nomenclatura,
   mesma estrutura de pastas. Em duvida, copiar um arquivo equivalente e adaptar.
 - Nao introduzir dependencias novas sem perguntar.
@@ -53,7 +57,7 @@ src/app/
     administrativo/empresa, estabelecimento, corporacao
     recurso/item, categoria, unidade
     venda/localizador/          # localizador.ts (Mesa/Comanda) + cliente/cliente.ts
-    venda/entrega/              # endereco.ts (modelo de delivery) - A CRIAR
+    venda/entrega/              # endereco.ts, endereco-validacao.ts, taxa-entrega*.ts
     integracao/pedido/          # pedido.ts + pedido-item.ts
     movimento/modalidade
   main/apps/ecommerce/          # A LOJA (shop, details, checkout, confirma)
@@ -113,8 +117,9 @@ src/app/
   `localizador`, mas NAO tem endereco de entrega ainda.
 - `PedidoTipo` JA inclui `Delivery = 210` e `Encomenda = 220`.
 - `LocalizadorTipo`: `Mesa = 110`, `Comanda = 120`.
-- ATENCAO: `ecommerce-checkout.component.ts` -> `voltarParaCardapio()` acessa
-  `this._ecommerceService.localizador.id` e QUEBRA no delivery; precisa ser protegido.
+- `voltarParaCardapio()` vive no service e passa por `cardapioRota()` (`modelo/rota.ts`), que
+  trata delivery (sem localizador). Nao voltar a exigir localizador ali: e o que fazia o
+  cliente de entrega ficar preso no checkout depois de confirmar.
 
 ---
 
@@ -130,7 +135,27 @@ O nome real do parametro no projeto e `localizadorid` (nao "mesa"/"table").
 
 ---
 
-## 6. Feature de delivery (A IMPLEMENTAR) - especificacao e onde mexer
+## 6. Feature de delivery (IMPLEMENTADA E EM PRODUCAO) - onde mexer
+
+> O schema abaixo foi levantado sondando o `pedido/grava` real. O backend JA suportava
+> delivery: recusava com "informacoes de entrega requeridas" porque o front mandava campos
+> com nome inventado. O que ele espera:
+>
+>     pedidoEntrega (NAO "entrega")
+>       cep, logradouro, bairro, uf : obrigatorios
+>       municipio   : string (nao a entidade que o estabelecimento devolve)
+>       local       : number - o numero do endereco
+>       responsavel : number - significado desconhecido, mandamos 10
+>       complemento : recusa string vazia, aceita ausente - omitir quando nao houver
+>
+>     pedidoPagamentos (array - NAO "pagamento" objeto)
+>       sequencial, formaIdentificador, formaNome, total, trocoPara, pago
+>
+> `trocoPara` ja existia no backend, dentro do pagamento.
+>
+> Limites que o schema impoe: `referencia` no maximo 20 caracteres (nao cabe endereco - em
+> mesa ele guarda o codigo do localizador); `pedidoCliente.identificador` minimo 10;
+> `pedidoCliente.imagem` nao pode vazia; `pedidoCliente.email` minimo 8.
 
 Comportamento esperado:
 1. Entrar sem `localizadorid` -> `isDelivery == true` (`localizador == null`).
@@ -165,7 +190,7 @@ D. `ecommerce.service.ts`:
    - `enderecoResumo(endereco)`: string "logradouro, numero - complemento - bairro - cidade/uf".
    - no `resolve()`, dentro do bloco `if (hasContext)`, chamar `this.enderecoCarrega()`.
    - no `confirma()`, apos o bloco `if (this.localizador) {...}`, adicionar:
-     se `isDelivery && endereco` -> `pedido.tipo = PedidoTipo.Delivery`, preencher `pedido.entrega`
+     se `isDelivery && endereco` -> `pedido.tipo = PedidoTipo.Delivery`, preencher `pedido.pedidoEntrega`
      a partir de `this.endereco`, e `pedido.referencia = enderecoResumo(this.endereco)`.
 
 E. `ecommerce-checkout.component.ts`:
@@ -236,7 +261,7 @@ Implementacao do delivery (executar em ordem; detalhes na secao 6):
 - [x] 4. No `ecommerce.service.ts`: `endereco` + `onEnderecoChange`, `get isDelivery()`,
         `enderecoChave/enderecoCarrega/enderecoSalva/enderecoResumo`.
 - [x] 5. Chamar `enderecoCarrega()` no `resolve()` e tratar delivery no `confirma()`
-        (`PedidoTipo.Delivery` + `pedido.entrega` + `referencia`).
+        (`PedidoTipo.Delivery` + `pedido.pedidoEntrega` + `referencia`).
 - [x] 6. Checkout `.ts`: estado e metodos de endereco, trava no `finalizar()`,
         correcao do `voltarParaCardapio()` para delivery.
 - [x] 7. Checkout `.html`: card "Endereco de entrega" (resumo/editar ou formulario).
@@ -264,18 +289,82 @@ Evolucao da feature:
       `modulos/venda/entrega/taxa-entrega-calculo.ts` (Haversine, ray casting, dispatcher por
       `TaxaTipo`); modelos em `taxa-entrega.ts`; service carrega/salva config por estabelecimento
       (`taxaEntregaConfigCarrega/Salva`, `onTaxaConfigChange`) e usa o motor no `freteRecalcula()`;
-      geocoding via Nominatim/OSM com cache + fallback mock. Mapa: `leaflet` + `leaflet-draw` (OSM).
+      geocoding via Photon (photon.komoot.io) com cache. NAO trocar por Nominatim: ele nao
+      encontra os enderecos reais das unidades, que estao no OSM. Mapa: `leaflet` + `leaflet-draw`.
       Spec/plano em `docs/superpowers/`. Ver `docs/taxa-entrega-tipos.md`.
       Pendente (integracao real): endpoint de config (`aps://...`) no lugar do storage; dropdown
       real de empresa/estabelecimento; distancia por rota (Distance Matrix/OSRM); base GeoJSON de
       bairros pronta; import KML; substituir `window.prompt` do bairro por modal Angular.
-- [ ] Validacao de CEP: mascara e busca de endereco por CEP (autopreencher logradouro/bairro/cidade/uf).
-- [ ] Mostrar endereco e frete no resumo do pedido (checkout) e na tela de confirmacao.
+- [x] Validacao de CEP: mascara e busca por CEP. Mascara em `endereco.ts` (`cepFormata`,
+      `cepDigitos`, `cepValido`); busca automatica no oitavo digito com debounce de 500ms no
+      checkout. ViaCEP direto do navegador.
+- [x] Mostrar endereco e frete no resumo do pedido. O resumo lista como receber, endereco,
+      forma de pagamento e troco abaixo do total (`.resumo-escolhas`).
+- [x] Campos obrigatorios do endereco marcados com asterisco e erro no proprio campo, todos de
+      uma vez (`endereco-validacao.ts`). A validacao antiga so avisava por toast e parava no
+      primeiro erro - e sem o CSS do toastr (que so chegou no merge da master) o toast nao
+      aparecia, entao o Salvar parecia nao fazer nada.
+- [x] Troco no Dinheiro: "precisa de troco?" + valor, com os quatro estados no resumo
+      (`troco-resumo.ts`). Vai em `pedidoPagamentos[0].trocoPara`.
 - [ ] Multiplos enderecos por cliente: listar, escolher e definir endereco padrao (opcional).
 
 Integracao (quando houver backend):
-- [ ] Trocar a persistencia mock (storage) por API real, mantendo a assinatura dos metodos.
-- [ ] Persistir/recuperar endereco vinculado ao cliente autenticado.
+- [ ] **Endpoint de config da taxa. E o unico bloqueio real.** A config vive no `localStorage`
+      de quem configura, entao NAO CHEGA NO CLIENTE: todo cliente paga o padrao hardcoded
+      (Raio, 2km=R$5 / 5km=R$8 / 10km=R$12). A tela de config funciona, mas configura so o
+      proprio navegador. Nomes no padrao do back: `aps://integracao/entrega/taxa/{estabId}`
+      (ler, via `encontra`) e `aps://integracao/entrega/taxa/grava` (gravar, via `grava`).
+      Aberto: o shop (`aps://`) pode gravar? Nao ha nenhuma escrita em `sirius-s` alem do
+      `pedido/grava`. Se for read-only por design, a tela de config pertence a retaguarda.
+- [ ] Persistir endereco vinculado ao cliente autenticado. Hoje e 1 endereco no `localStorage`
+      por empresa+estabelecimento: some se o cliente trocar de navegador ou celular. O pedido
+      ja manda `pedidoCliente.identificador` (login Google), entao a chave existe.
+
+Perguntas para o backend (sobraram poucas, e sao especificas):
+- [ ] **O que e `pedidoEntrega.responsavel`?** Mandamos `ENTREGA_RESPONSAVEL = 10` (constante
+      no topo do `ecommerce.service.ts`) porque funciona. O campo e obrigatorio e aceita
+      qualquer numero - testado com 999 e -1, os dois gravaram. Nao sabemos o significado nem
+      os outros valores. Estamos carimbando todo pedido de delivery com um valor que nao
+      entendemos, e o back aceita calado.
+- [ ] `pedidoEntrega.local` e mesmo o numero do endereco? E number e aceitou 100; e o que faz
+      sentido, mas nao foi confirmado.
+- [ ] O frete deve ir como `pedido.frete` (hoje) ou como linha em `pedidoItens` com o item
+      "Taxa de Entrega" (codigo 1010, id `6fa6ca36-cf35-4030-9b7a-6898f7757c07`, tipo 210,
+      R$ 6,00 na tabela)? O `valor` que mandamos e gravado como veio - o back nao reimpoe o
+      preco de tabela (verificado). O item e alcancavel pelo shop sem login.
+
+Debitos e armadilhas conhecidas:
+- [ ] `environment.prod.ts` so tem `apiUrl: 'http://localhost:4000'` - sem `api`/`apr`/`aps`.
+      `npm run build:prod` falha com 8 erros. Producao funciona porque o deploy roda
+      `ng build` sem configuracao (`defaultConfiguration` esta vazio no `angular.json`), o
+      que tambem significa producao sem otimizacao e sem hash no bundle (`main.js`).
+- [ ] Tela de config de taxa: ids fixos no `menu.ts` apontando para loja de teste. E prototipo;
+      o link sai quando a tela migrar para a retaguarda, onde o contexto vem da sessao.
+- [ ] `pedidoItem.item.nome` recebe o **id** do item (`confirma()` faz
+      `pedidoItem.item.nome = linha.item.id`). Bug antigo, confirmado em pedido real gravado.
+- [ ] Qualquer `input-group` com prepend fica torto neste tema: o grupo tem 48px cravados e o
+      `.form-control` fica em 38px sem esticar. A tela de config usa `input-group` com "R$" nos
+      valores das faixas - provavelmente esta torta la tambem (nao verificado).
+- [ ] Geocoder: Photon (`photon.komoot.io`), instancia publica sem SLA. Para volume, self-host
+      ou proxy no back - o modulo `xterno` ja existe na retaguarda (`api://xterno/cep/{cep}`,
+      autenticado, entao o shop anonimo nao alcanca).
+- [ ] Pedidos de teste criados no ambiente durante a descoberta do schema (7 no total, entre
+      eles `d95996b7`, `602ade5c`, `25b03d9d`, `847361a7`, `845ce667`, `d4c6aea5`) - alguns com
+      `responsavel` inventado (999, -1). Vale apagar.
+
+Nao verificado (fazer com clique de gente, nao por automacao):
+- [ ] Fluxo de MESA ponta a ponta - garantir que nao quebrou.
+- [ ] Fluxo de DELIVERY ponta a ponta clicando: item, endereco, dinheiro com troco, confirmar,
+      ver o toast e voltar ao cardapio. O `confirma()` grava 201 e o `cardapioRota()` tem teste,
+      mas o ciclo completo nunca foi observado.
+- [ ] Arrastar o pino na tela de taxa, salvar e recarregar: tem que voltar onde foi largado.
+- [ ] O aviso vermelho de troco insuficiente renderizando (coberto por teste unitario).
+
+> Nota sobre testar pelo navegador: dirigir esta app por JS de fora da zona do Angular mente.
+> `.click()` e `router.navigate()` por console nao disparam change detection, e o
+> `ng.getComponent` devolve o componente `:leave` da animacao `fadeIn` - que fica no DOM em
+> `position: absolute` durante a transicao, ja destruido, reportando estado velho. Use clique
+> de verdade e confie na tela, nao na inspecao.
 
 Como manter esta lista:
 - Marcar [x] ao concluir e mover itens novos para o grupo correto.
