@@ -8,6 +8,7 @@ import { AuthenticationService } from 'app/auth/service';
 import { EComProduct } from './modelo/product';
 import { ApiService } from 'app/modulos/api.service';
 import { Cardapio, CardapioItem } from './modelo/cardapio';
+import { cardapioRota } from './modelo/rota';
 import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
 import {
   Estabelecimento, estabelecimentoEnderecoOrigem, estabelecimentoEnderecoQueries,
@@ -818,9 +819,10 @@ export class EcommerceService implements Resolve<any> {
   }
 
   voltarParaCardapio() {
-    if (!this.empresa || !this.estabelecimento || !this.localizador) {
+    const rota = cardapioRota(this.empresa?.id, this.estabelecimento?.id, this.localizador?.id);
+    if (!rota) {
       return;
     }
-    this._router.navigate([`/apps/e-commerce/shop/${this.empresa.id}/${this.estabelecimento.id}/${this.localizador.id}`]);
+    this._router.navigate(rota);
   }
 }

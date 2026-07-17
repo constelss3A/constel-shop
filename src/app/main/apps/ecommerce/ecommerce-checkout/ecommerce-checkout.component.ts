@@ -346,14 +346,7 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
   }
 
   voltarParaCardapio() {
-    const empresaId: string = this._ecommerceService.empresa.id;
-    const estabelecimentoId: string = this._ecommerceService.estabelecimento.id;
-    const localizador = this._ecommerceService.localizador;
-    if (localizador) {
-      this._router.navigate([`/apps/e-commerce/shop/${empresaId}/${estabelecimentoId}/${localizador.id}`]);
-      return;
-    }
-    this._router.navigate([`/apps/e-commerce/shop/${empresaId}/${estabelecimentoId}`]);
+    this._ecommerceService.voltarParaCardapio();
   }
 
   private initGoogleSignIn(): void {
