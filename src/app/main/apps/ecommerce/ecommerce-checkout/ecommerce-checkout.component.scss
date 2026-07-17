@@ -133,3 +133,22 @@ app-ecommerce-checkout .ecommerce-card .item-img {
     }
   }
 }
+
+.resumo-escolhas {
+  .detail-title {
+    color: #6e6b7b;
+  }
+
+  .detail-amt {
+    font-weight: 500;
+    text-align: right;
+  }
+
+  // O endereco e longo e nao pode empurrar o valor para fora do card.
+  .resumo-endereco {
+    font-weight: 400;
+    font-size: 0.9rem;
+    max-width: 60%;
+    word-break: break-word;
+  }
+}

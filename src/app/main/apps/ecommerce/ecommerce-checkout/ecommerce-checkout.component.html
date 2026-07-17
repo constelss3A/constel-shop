@@ -320,6 +320,35 @@
                     <div class="detail-amt font-weight-bolder">{{ total | currency:'BRL' }}</div>
                   </li>
                 </ul>
+
+                <!-- Confirmacao das escolhas: o resumo e a ultima coisa antes do botao -->
+                <ng-container *ngIf="isDelivery">
+                  <hr />
+                  <ul class="list-unstyled resumo-escolhas">
+                    <li class="price-detail">
+                      <div class="detail-title">Como receber</div>
+                      <div class="detail-amt">{{ isEntrega ? 'Entrega' : 'Retirada no balcão' }}</div>
+                    </li>
+                    <li class="price-detail" *ngIf="isEntrega && endereco">
+                      <div class="detail-title">Endereço</div>
+                      <div class="detail-amt resumo-endereco">{{ enderecoResumo }}</div>
+                    </li>
+                    <li class="price-detail">
+                      <div class="detail-title">Pagamento</div>
+                      <div class="detail-amt" [class.text-muted]="!formaPagamento">
+                        {{ formaPagamento?.nome || 'A escolher' }}
+                      </div>
+                    </li>
+                    <li class="price-detail" *ngIf="isDinheiro && trocoExibido">
+                      <div class="detail-title">Troco para</div>
+                      <div class="detail-amt">{{ trocoPara | currency:'BRL' }}</div>
+                    </li>
+                    <li class="price-detail" *ngIf="isDinheiro && !trocoNecessario">
+                      <div class="detail-title">Troco</div>
+                      <div class="detail-amt">Não precisa</div>
+                    </li>
+                  </ul>
+                </ng-container>
                 <div class="finalizar-wrapper position-relative">
                   <button
                     type="button"
