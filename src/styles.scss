@@ -1,2 +1,20 @@
 @import '@core/scss/core.scss';
 @import './assets/scss/styles';
+@import '@core/scss/angular/libs/toastr.component.scss';
+
+.toast-top-center .ngx-toastr {
+  width: 380px !important;
+  padding: 22px 24px 22px 60px !important;
+
+  &:before {
+    left: 1.5rem !important;
+    height: 28px !important;
+    width: 28px !important;
+  }
+  .toast-title {
+    font-size: 1.05rem !important;
+  }
+  .toast-message {
+    font-size: 0.95rem !important;
+  }
+}

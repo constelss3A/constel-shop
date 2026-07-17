@@ -3,8 +3,15 @@
   <div class="content-body">
     <section class="ecommerce-application">
       <div class="d-flex align-items-center my-2" *ngIf="localizador">
-        <img src="assets/images/ecommerce/localizador.png" width="32" height="32" alt="modalidade">
-        <span class="font-medium-3 ml-50">{{ localizador?.modalidade?.nome }} {{ localizador?.codigo }}</span>
+        <img
+          src="assets/images/ecommerce/localizador.png"
+          width="32"
+          height="32"
+          alt="modalidade"
+        />
+        <span class="font-medium-3 ml-50"
+          >{{ localizador?.modalidade?.nome }} {{ localizador?.codigo }}</span
+        >
       </div>
 
       <!-- Como receber (delivery) -->
@@ -180,21 +187,47 @@
         <!-- Sacola -->
         <div class="checkout-items">
           <ng-container *ngIf="sacola?.linhas?.length; else sacolaVazia">
-            <div class="card ecommerce-card" *ngFor="let linha of sacola.linhas">
+            <div
+              class="card ecommerce-card"
+              *ngFor="let linha of sacola.linhasPrincipais"
+            >
               <div class="item-img text-center">
                 <img
-                  [src]="linha.item.imagem || 'assets/images/ecommerce/categoria.png'"
+                  [src]="
+                    linha.item.imagem || 'assets/images/ecommerce/categoria.png'
+                  "
                   [alt]="linha.item.nome"
                 />
               </div>
               <div class="card-body">
                 <div class="item-name">
                   <h6 class="mb-0">{{ linha.item.nome }}</h6>
-                  <span class="item-company text-muted">{{ linha.valor | currency:'BRL' }} / un.</span>
+                  <span class="item-company text-muted"
+                    >{{ sacola.getTotalLinha(linha) | currency: "BRL" }} / un.</span
+                  >
+                </div>
+                <div *ngIf="linha.item.montagemTipo === 10">
+                  <div
+                    *ngFor="
+                      let linhaSubItem of sacola.getLinhasSubItens(
+                        linha.item.montagemBloco!
+                      )
+                    "
+                  >
+                    <div class="montagem-sub-item">
+                        {{ linhaSubItem.quantidade }} x {{ linhaSubItem.item.nome }}
+                        <div class="ml-2" *ngIf="linhaSubItem.item.montagemGrupoTipo === 20">
+                          + {{ linhaSubItem.valor | currency: "BRL" }}
+                        </div>
+                    </div>
+                  </div>
                 </div>
                 <div class="item-quantity mt-1">
                   <span class="quantity-title">Quantidade:</span>
-                  <div class="input-group touchspin-cart ml-50" style="max-width: 140px;">
+                  <div
+                    class="input-group touchspin-cart ml-50"
+                    style="max-width: 140px"
+                  >
                     <core-touchspin
                       [numberValue]="linha.quantidade"
                       [stepValue]="1"
@@ -208,7 +241,9 @@
               <div class="item-options text-center">
                 <div class="item-wrapper">
                   <div class="item-cost">
-                    <h4 class="item-price">{{ linha.total | currency:'BRL' }}</h4>
+                    <h4 class="item-price">
+                      {{ sacola.getTotalLinha(linha) | currency: "BRL" }}
+                    </h4>
                   </div>
                 </div>
                 <button
@@ -226,10 +261,19 @@
           <ng-template #sacolaVazia>
             <div class="card">
               <div class="card-body text-center py-3">
-                <i data-feather="shopping-bag" class="font-large-2 text-muted mb-1"></i>
+                <i
+                  data-feather="shopping-bag"
+                  class="font-large-2 text-muted mb-1"
+                ></i>
                 <h5 class="mb-0">Sua sacola está vazia</h5>
-                <p class="text-muted">Adicione itens do cardápio para continuar.</p>
-                <a class="btn btn-primary mt-1" (click)="voltarParaCardapio()"rippleEffect>
+                <p class="text-muted">
+                  Adicione itens do cardápio para continuar.
+                </p>
+                <a
+                  class="btn btn-primary mt-1"
+                  (click)="voltarParaCardapio()"
+                  rippleEffect
+                >
                   Voltar ao cardápio
                 </a>
               </div>
@@ -279,7 +323,11 @@
                   >
                     Confirmar pedido
                   </button>
-                  <div *ngIf="!logado" id="checkout-google-btn" class="google-btn-overlay"></div>
+                  <div
+                    *ngIf="!logado"
+                    id="checkout-google-btn"
+                    class="google-btn-overlay"
+                  ></div>
                 </div>
               </div>
             </div>

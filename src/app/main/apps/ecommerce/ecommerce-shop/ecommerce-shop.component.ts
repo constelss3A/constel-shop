@@ -1,17 +1,18 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from "@angular/core";
 
-import { EcommerceService } from 'app/main/apps/ecommerce/ecommerce.service';
-import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
-import { Estabelecimento } from 'app/modulos/administrativo/estabelecimento/estabelecimento';
-import { Localizador } from 'app/modulos/venda/localizador/localizador';
-import { Cardapio, CardapioItem } from '../modelo/cardapio';
+import { EcommerceService } from "app/main/apps/ecommerce/ecommerce.service";
+import { Empresa } from "app/modulos/administrativo/empresa/empresa";
+import { Estabelecimento } from "app/modulos/administrativo/estabelecimento/estabelecimento";
+import { Localizador } from "app/modulos/venda/localizador/localizador";
+import { Cardapio, CardapioItem } from "../modelo/cardapio";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
-  selector: 'app-ecommerce-shop',
-  templateUrl: './ecommerce-shop.component.html',
-  styleUrls: ['./ecommerce-shop.component.scss'],
+  selector: "app-ecommerce-shop",
+  templateUrl: "./ecommerce-shop.component.html",
+  styleUrls: ["./ecommerce-shop.component.scss"],
   encapsulation: ViewEncapsulation.None,
-  host: { class: 'ecommerce-application' }
+  host: { class: "ecommerce-application" },
 })
 export class EcommerceShopComponent implements OnInit {
   // public
@@ -23,7 +24,7 @@ export class EcommerceShopComponent implements OnInit {
   public cartList;
   public page = 1;
   public pageSize = 9;
-  public searchText = '';
+  public searchText = "";
 
   public empresa: Empresa;
   public estabelecimento: Estabelecimento;
@@ -33,14 +34,20 @@ export class EcommerceShopComponent implements OnInit {
   public faixa: string;
   public avatar: string;
 
+  public itemSelecionado: CardapioItem | null = null;
+
+  @ViewChild('modalMontagem') modalMontagem!: TemplateRef<any>;
+
   /**
    *
    * @param {CoreSidebarService} _coreSidebarService
    * @param {EcommerceService} _ecommerceService
+   * @param {NgbModal} _modalService
    */
   constructor(
     private _ecommerceService: EcommerceService,
-  ) { }
+    private _modalService: NgbModal,
+  ) {}
 
   get isDelivery(): boolean {
     return this._ecommerceService.isDelivery;
@@ -66,7 +73,7 @@ export class EcommerceShopComponent implements OnInit {
   /**
    * Sort Product
    */
-  sortProduct(sortParam) {
+  sortProduct(sortParam: any) {
     this._ecommerceService.sortProduct(sortParam);
   }
 
@@ -79,76 +86,106 @@ export class EcommerceShopComponent implements OnInit {
   ngOnInit(): void {
     // Subscribe to ProductList change
 
-    this._ecommerceService.onEmpresaChange.subscribe(empresa => {
+    this._ecommerceService.onEmpresaChange.subscribe((empresa) => {
       this.empresa = empresa;
-      console.log('empresa atualizada', this.empresa);
-      this.faixa = empresa.empresaConfiguracao?.parametros?.visual?.cardapio?.faixa;
+      console.log("empresa atualizada", this.empresa);
+      this.faixa =
+        empresa.empresaConfiguracao?.parametros?.visual?.cardapio?.faixa;
       this.avatar = empresa.imagem;
     });
 
-    this._ecommerceService.onEstabelecimentoChange.subscribe(estabelecimento => {
-      this.estabelecimento = estabelecimento;
-    });
+    this._ecommerceService.onEstabelecimentoChange.subscribe(
+      (estabelecimento) => {
+        this.estabelecimento = estabelecimento;
+      },
+    );
 
-    this._ecommerceService.onLocalizadorChange.subscribe(localizador => {
+    this._ecommerceService.onLocalizadorChange.subscribe((localizador) => {
       this.localizador = localizador;
-      console.log('localizador atualizado', this.localizador);
+      console.log("localizador atualizado", this.localizador);
     });
 
-    this._ecommerceService.onCardapioChange.subscribe(cardapio => {
+    this._ecommerceService.onCardapioChange.subscribe((cardapio) => {
       this.cardapio = cardapio;
     });
 
     // Subscribe to Wishlist change
-    this._ecommerceService.onWishlistChange.subscribe(res => (this.wishlist = res));
+    this._ecommerceService.onWishlistChange.subscribe(
+      (res) => (this.wishlist = res),
+    );
 
     // Subscribe to Cartlist change
-    this._ecommerceService.onCartListChange.subscribe(res => (this.cartList = res));
+    this._ecommerceService.onCartListChange.subscribe(
+      (res) => (this.cartList = res),
+    );
 
     // content header
     this.contentHeader = {
-      headerTitle: 'Loja',
+      headerTitle: "Loja",
       actionButton: true,
       breadcrumb: {
-        type: '',
+        type: "",
         links: [
           {
-            name: 'Home',
+            name: "Home",
             isLink: true,
-            link: '/'
+            link: "/",
           },
           {
-            name: 'eCommerce',
+            name: "eCommerce",
             isLink: true,
-            link: '/'
+            link: "/",
           },
           {
-            name: 'Loja',
-            isLink: false
-          }
-        ]
-      }
+            name: "Loja",
+            isLink: false,
+          },
+        ],
+      },
     };
   }
 
   formataValor(valor: number) {
-    valor ??= 0.00;
-    if ((valor % 1) === 0) {
-      return 'R$ ' + valor.toFixed(0).replace('.', ',');
-    }
-    return 'R$ ' + valor.toFixed(2).replace('.', ',');
+    valor ??= 0.0;
+    // if (valor % 1 === 0) {
+    //   return "R$ " + valor.toFixed(0).replace(".", ",");
+    // }
+    return "R$ " + valor.toFixed(2).replace(".", ",");
   }
 
   irPara(id: string) {
     const elemento = document.getElementById(id);
     if (elemento) {
-      elemento.scrollIntoView({ behavior: 'smooth' });
+      elemento.scrollIntoView({ behavior: "smooth" });
     }
   }
 
   sacolaAdiciona(item: CardapioItem) {
-    const itemDetalhado = this._ecommerceService.getItemDetalhado(item.id).toPromise();
-    console.log('itemDetalhado', itemDetalhado);
-    this._ecommerceService.addToCart(item.id).then();
+    const itemDetalhado = this._ecommerceService
+      .getItemDetalhado(item.id)
+      .toPromise();
+    console.log("itemDetalhado", itemDetalhado);
+    itemDetalhado.then((detalhado) => {
+      if(detalhado.montagem) {
+        this.itemSelecionado = item;
+        this.modalMontagemOpen(item);
+      } else {
+        this._ecommerceService.addToCart(item.id).then();
+      }
+    });
+  }
+
+  /**
+   * Open Scrollable Modal
+   * @param modalMontagem
+   */
+
+  modalMontagemOpen(item: CardapioItem) {
+    this.itemSelecionado = item;
+    this._modalService.open(this.modalMontagem, {
+      scrollable: true,
+      centered: true,
+      size: "lg",
+    });
   }
 }

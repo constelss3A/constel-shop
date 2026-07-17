@@ -21,6 +21,11 @@ import { EcommerceSidebarComponent } from 'app/main/apps/ecommerce/ecommerce-sho
 import { EcommerceCheckoutComponent } from 'app/main/apps/ecommerce/ecommerce-checkout/ecommerce-checkout.component';
 import { EcommerceCheckoutItemComponent } from 'app/main/apps/ecommerce/ecommerce-checkout/ecommerce-checkout-item/ecommerce-checkout-item.component';
 import { EcommerceConfigTaxaComponent } from 'app/main/apps/ecommerce/ecommerce-config-taxa/ecommerce-config-taxa.component';
+import { ModalsModule } from 'app/main/components/modals/modals.module';
+import { BreadcrumbModule } from "app/layout/components/content-header/breadcrumb/breadcrumb.module";
+import { SelectModule } from 'app/main/forms/form-elements/select/select.module';
+import { ModalsComponent } from 'app/main/components/modals/modals.component';
+import { EcommerceMontagemModalComponent } from './ecommerce-montagem-modal/ecommerce-montagem-modal.component';
 
 const DEFAULT_SWIPER_CONFIG: SwiperConfigInterface = {
   direction: 'horizontal',
@@ -98,7 +103,8 @@ const routes: Routes = [
     EcommerceCheckoutComponent,
     EcommerceItemComponent,
     EcommerceCheckoutItemComponent,
-    EcommerceConfigTaxaComponent
+    EcommerceConfigTaxaComponent,
+    EcommerceMontagemModalComponent,
   ],
   imports: [
     CommonModule,
@@ -111,7 +117,8 @@ const routes: Routes = [
     CoreCommonModule,
     NgbModule,
     NouisliderModule,
-  ],
+    
+],
   providers: [
     {
       provide: SWIPER_CONFIG,

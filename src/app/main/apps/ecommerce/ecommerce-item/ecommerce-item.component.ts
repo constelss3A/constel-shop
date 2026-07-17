@@ -10,7 +10,7 @@ import { EcommerceService } from 'app/main/apps/ecommerce/ecommerce.service';
   host: { class: 'ecommerce-application' }
 })
 export class EcommerceItemComponent implements OnInit {
-  // Input Decorotor
+  // Input Decorator
   @Input() product;
   @Input() isWishlistOpen = false;
 
@@ -20,6 +20,7 @@ export class EcommerceItemComponent implements OnInit {
   /**
    *
    * @param {EcommerceService} _ecommerceService
+   *
    */
   constructor(private _ecommerceService: EcommerceService) {}
 

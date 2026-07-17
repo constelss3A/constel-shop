@@ -1,28 +1,48 @@
 <!-- Ecommerce Item -->
 <div class="item-container">
   <a [routerLink]="'/apps/e-commerce/details/' + product.id">
-    <img class="img-fluid item-image card-img-top" [src]="product.image" alt="img-placeholder" />
+    <img
+      class="img-fluid item-image card-img-top"
+      [src]="product.image"
+      alt="img-placeholder"
+    />
   </a>
 </div>
 <div class="card-body">
   <div class="item-wrapper">
     <div class="item-rating">
       <div class="rating rating-sm">
-        <ngb-rating [rate]="product.rating" [readonly]="true" [max]="5" class="outline-none">
+        <ngb-rating
+          [rate]="product.rating"
+          [readonly]="true"
+          [max]="5"
+          class="outline-none"
+        >
           <ng-template let-fill="fill" let-index="index"
-            ><span class="fa fa-star-o mr-25" [class.fa-star]="fill === 100"></span
+            ><span
+              class="fa fa-star-o mr-25"
+              [class.fa-star]="fill === 100"
+            ></span
           ></ng-template>
         </ngb-rating>
       </div>
     </div>
     <div class="item-cost">
-      <h6 class="item-price">R$ {{ product.price | number:'1.2-2' }}</h6>
+      <h6 class="item-price">R$ {{ product.price | number: "1.2-2" }}</h6>
     </div>
   </div>
   <h6 class="item-name">
-    <a class="text-body" [routerLink]="'/apps/e-commerce/details/' + product.id"> {{ product.name }}</a>
+    <a
+      class="text-body"
+      [routerLink]="'/apps/e-commerce/details/' + product.id"
+    >
+      {{ product.name }}</a
+    >
     <span class="card-text item-company"
-      >By <a href="javascript:void(0)" class="company-name">{{ product.brand }}</a></span
+      >By
+      <a href="javascript:void(0)" class="company-name">{{
+        product.brand
+      }}</a></span
     >
   </h6>
   <p class="card-text item-description">
@@ -32,7 +52,7 @@
 <div class="item-options text-center">
   <div class="item-wrapper">
     <div class="item-cost">
-      <h4 class="item-price">R$ {{ product.price | number:'1.2-2' }}</h4>
+      <h4 class="item-price">R$ {{ product.price | number: "1.2-2" }}</h4>
       <p class="card-text shipping" *ngIf="product.hasFreeShipping">
         <span class="badge badge-pill badge-light-success">Entrega Grátis</span>
       </p>

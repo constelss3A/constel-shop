@@ -1,13 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, concatMap, map, tap } from 'rxjs/operators';
 
 import { AuthenticationService } from 'app/auth/service';
 import { EComProduct } from './modelo/product';
 import { ApiService } from 'app/modulos/api.service';
-import { Cardapio } from './modelo/cardapio';
+import { Cardapio, CardapioItem } from './modelo/cardapio';
 import { Empresa } from 'app/modulos/administrativo/empresa/empresa';
 import {
   Estabelecimento, estabelecimentoEnderecoOrigem, estabelecimentoEnderecoQueries,
@@ -86,6 +86,7 @@ export class EcommerceService implements Resolve<any> {
     private _httpClient: HttpClient,
     private apiService: ApiService,
     private authService: AuthenticationService,
+    private _router: Router,
   ) {
     this.sacola = new Sacola();
     this.onEmpresaChange = new BehaviorSubject({});
@@ -638,6 +639,38 @@ export class EcommerceService implements Resolve<any> {
     });
   }
 
+  /**
+   * Add In Cart
+   *
+   * @param id
+   */
+  addComposicaoToCart(item: Item): Promise<void> {
+    // const item = this.getItem(id);
+    if (!item) {
+      return;
+    }
+    this.sacola.adiciona(item, item.quantidade);
+    return new Promise<void>((resolve, reject) => {
+      const product = this.productList.find(product => product.id === item.id);
+      if (product) {
+        product.isInCart = true;
+      }
+      const maxValueId = Math.max(...this.cartList.map(cart => cart.id), 0) + 1;
+      const cartRef = { id: maxValueId, productId: item.id, qty: item.quantidade };
+      var cartId: any = '';
+
+      // If cart is not Empty
+      if (maxValueId !== 1) {
+        cartId = maxValueId;
+      }
+      this.onSacolaChange.next(this.sacola);
+      this._httpClient.post('api/ecommerce-userCart/' + cartId, { ...cartRef }).subscribe(response => {
+        this.getCartList();
+        resolve();
+      }, reject);
+    });
+  }
+
   sacolaIdentifica(cliente: SacolaCliente) {
     this.sacola.identifica(cliente);
   }
@@ -769,7 +802,6 @@ export class EcommerceService implements Resolve<any> {
     //   ? `${pedido.pedidoCliente.nome} (${pedido.pedidoCliente.email})`
     //   : 'Anônimo';
     // alert(`Confirmando pedido de ${clienteInfo}\n${pedido.pedidoItens.length} item(ns) — Total: R$ ${pedido.total.toFixed(2)}`);
-    console.log('Pedido a enviar:', JSON.stringify(pedido, null, 2));
     this.apiService.grava<Pedido>(`aps://integracao/pedido/grava`, pedido, {
       'empresa-id': this.empresa.id,
       'empresa-nome': this.empresa.nome,
@@ -777,7 +809,18 @@ export class EcommerceService implements Resolve<any> {
       'estabelecimento-nome': this.estabelecimento.nome,
     }).subscribe(() => {
       this.sacola.inicia();
-      this.apiService.exibeSucesso('Pedido enviado');
+      this.apiService.exibeSucesso('Pedido enviado', 2500);
+      setTimeout(() => {
+        this.apiService.limpaMensagens();
+        this.voltarParaCardapio();
+      }, 2500);
     });
+  }
+
+  voltarParaCardapio() {
+    if (!this.empresa || !this.estabelecimento || !this.localizador) {
+      return;
+    }
+    this._router.navigate([`/apps/e-commerce/shop/${this.empresa.id}/${this.estabelecimento.id}/${this.localizador.id}`]);
   }
 }
