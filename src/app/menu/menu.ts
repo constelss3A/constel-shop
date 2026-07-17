@@ -51,15 +51,15 @@ const menux: CoreMenu[] = [
             url: 'apps/e-commerce/checkout'
           },
           {
-            // Prototipo: a tela precisa de empresa/estabelecimento na rota, e este menu nao
-            // tem contexto de loja para passar - por isso os ids da Durango Builder's estao
-            // fixos aqui. Na retaguarda o contexto vem da sessao e este link sai.
+            // Prototipo: ids fixos (Durango Builder's / Dionisio Torres). O menu nao tem
+            // contexto de loja para passar na rota. Este link sai quando a tela migrar para
+            // a retaguarda, onde o contexto vem da sessao.
             id: 'taxa-entrega',
             title: 'Taxa de entrega',
             translate: 'MENU.APPS.ECOMMERCE.DELIVERYFEE',
             type: 'item',
             icon: 'truck',
-            url: 'apps/e-commerce/config-taxa-entrega/0d1542e1-71fd-40f9-b1f7-ae00ab08626c/5fc81433-76be-484a-b3cf-4c723572d3af'
+            url: 'apps/e-commerce/config-taxa-entrega/0d1542e1-71fd-40f9-b1f7-ae00ab08626c/fe5b422e-bfb2-4328-83d4-7876020acef9'
           }
         ]
       },

@@ -37,8 +37,6 @@ app-ecommerce-checkout .ecommerce-card .item-img {
   }
 }
 
-// Formas de pagamento: uma escolha por linha. Radio de verdade (nao label-botao), para
-// funcionar no teclado e ser lido como grupo de opcoes por leitor de tela.
 .pagamento-lista {
   display: flex;
   flex-direction: column;
@@ -80,12 +78,8 @@ app-ecommerce-checkout .ecommerce-card .item-img {
     }
   }
 
-  // O troco pertence ao Dinheiro: recuado para mostrar a ligacao, com respiro proprio.
-  //
-  // Sem .input-group aqui de proposito. O tema crava 48px no grupo e o .form-control fica
-  // em 38px sem esticar, entao o "R$" descola do campo - acontece com qualquer input-group
-  // com prepend neste tema. O "R$" virou parte do rotulo e o campo e um form-control comum,
-  // que bate com os campos de endereco logo acima.
+  // Sem .input-group aqui: o tema crava 48px no grupo e o .form-control fica em 38px sem
+  // esticar, entao o prepend descola do campo. Por isso o "R$" e parte do rotulo.
   .pagamento-troco {
     margin: 0.25rem 0 0.5rem 2.5rem;
     padding: 0.875rem 0;

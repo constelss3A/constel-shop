@@ -1,7 +1,5 @@
-// Rota do cardapio. O localizador e opcional de proposito: a ausencia dele E o modo
-// delivery, entao exigi-lo aqui nao deixa o cliente de entrega voltar para o cardapio.
-//
-// Devolve null quando nao ha contexto suficiente para navegar - quem chama nao navega.
+// O localizador e opcional porque a ausencia dele E o modo delivery: exigi-lo aqui deixa o
+// cliente de entrega preso no checkout.
 export function cardapioRota(
   empresaId: string,
   estabelecimentoId: string,

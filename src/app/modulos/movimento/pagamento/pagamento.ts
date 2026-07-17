@@ -21,12 +21,9 @@ export type TrocoResultado = {
   motivo?: TrocoMotivo;
 };
 
-// `trocoPara` e o valor com que o cliente vai pagar, nao o troco. Guardar a nota e nao a
-// diferenca e o que permite recalcular quando o total muda (frete recalculado, por exemplo)
-// sem ter que reinterpretar o que o cliente quis dizer.
-//
-// NaoInformado e Insuficiente sao coisas diferentes de proposito: campo vazio e o estado
-// inicial normal e nao merece erro na cara do cliente; valor abaixo do total e erro de fato.
+// `trocoPara` e o valor com que o cliente vai pagar, nao o troco: guardar a nota permite
+// recalcular quando o total muda. NaoInformado e Insuficiente sao distintos de proposito -
+// campo vazio e estado inicial normal, valor abaixo do total e erro.
 export function trocoCalcula(trocoPara: number, total: number): TrocoResultado {
   if (!trocoPara || !(trocoPara > 0)) {
     return { valido: false, troco: 0, motivo: TrocoMotivo.NaoInformado };

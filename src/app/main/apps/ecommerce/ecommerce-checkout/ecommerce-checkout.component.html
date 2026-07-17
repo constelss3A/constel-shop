@@ -84,7 +84,7 @@
                 [(ngModel)]="enderecoForm.apelido" [ngModelOptions]="{ standalone: true }" />
             </div>
             <div class="col-12 col-md-6 mb-1">
-              <label>CEP</label>
+              <label>CEP <span class="text-danger">*</span></label>
               <div class="input-group">
                 <input type="text" class="form-control" placeholder="00000-000" maxlength="9"
                   inputmode="numeric" [ngModel]="enderecoForm.cep" [ngModelOptions]="{ standalone: true }"
@@ -97,17 +97,20 @@
                   </button>
                 </div>
               </div>
-              <small class="text-muted">Preenche logradouro, bairro, cidade e UF automaticamente.</small>
+              <small class="text-danger d-block" *ngIf="enderecoErro('cep')">Informe um CEP com 8 dígitos</small>
+              <small class="text-muted" *ngIf="!enderecoErro('cep')">Preenche logradouro, bairro, cidade e UF automaticamente.</small>
             </div>
             <div class="col-12 col-md-8 mb-1">
-              <label>Logradouro</label>
+              <label>Logradouro <span class="text-danger">*</span></label>
               <input type="text" class="form-control"
                 [(ngModel)]="enderecoForm.logradouro" [ngModelOptions]="{ standalone: true }" />
+              <small class="text-danger d-block" *ngIf="enderecoErro('logradouro')">Informe o logradouro</small>
             </div>
             <div class="col-12 col-md-4 mb-1">
-              <label>Número</label>
+              <label>Número <span class="text-danger">*</span></label>
               <input type="text" class="form-control"
                 [(ngModel)]="enderecoForm.numero" [ngModelOptions]="{ standalone: true }" />
+              <small class="text-danger d-block" *ngIf="enderecoErro('numero')">Informe o número</small>
             </div>
             <div class="col-12 col-md-6 mb-1">
               <label>Complemento</label>
@@ -115,19 +118,23 @@
                 [(ngModel)]="enderecoForm.complemento" [ngModelOptions]="{ standalone: true }" />
             </div>
             <div class="col-12 col-md-6 mb-1">
-              <label>Bairro</label>
+              <label>Bairro <span class="text-danger">*</span></label>
               <input type="text" class="form-control"
                 [(ngModel)]="enderecoForm.bairro" [ngModelOptions]="{ standalone: true }" />
+              <small class="text-danger d-block" *ngIf="enderecoErro('bairro')">Informe o bairro</small>
             </div>
             <div class="col-12 col-md-8 mb-1">
-              <label>Cidade</label>
+              <label>Cidade <span class="text-danger">*</span></label>
               <input type="text" class="form-control"
                 [(ngModel)]="enderecoForm.cidade" [ngModelOptions]="{ standalone: true }" />
+              <small class="text-danger d-block" *ngIf="enderecoErro('cidade')">Informe a cidade</small>
             </div>
             <div class="col-12 col-md-4 mb-1">
-              <label>UF</label>
+              <label>UF <span class="text-danger">*</span></label>
               <input type="text" class="form-control" maxlength="2"
+                [class.is-invalid]="enderecoErro('uf')"
                 [(ngModel)]="enderecoForm.uf" [ngModelOptions]="{ standalone: true }" />
+              <small class="text-danger d-block" *ngIf="enderecoErro('uf')">Informe a UF</small>
             </div>
             <div class="col-12 mb-1">
               <label>Ponto de referência</label>

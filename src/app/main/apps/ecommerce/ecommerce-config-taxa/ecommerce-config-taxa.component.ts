@@ -81,10 +81,6 @@ export class EcommerceConfigTaxaComponent implements OnInit, AfterViewInit, OnDe
     if (this.mapa) { this.mapa.remove(); }
   }
 
-  // Contexto vem da rota (config-taxa-entrega/:empresaid/:estabelecimentoid), igual ao shop.
-  // O resolver do EcommerceService ja carregou empresa e estabelecimento antes desta tela
-  // existir - nao ha id para digitar. Quando esta tela migrar para a retaguarda, o contexto
-  // passa a vir da sessao de la; o resto continua igual.
   private carrega(): void {
     if (!this._ecommerceService.estabelecimento) {
       this.semContexto = true;
@@ -108,9 +104,8 @@ export class EcommerceConfigTaxaComponent implements OnInit, AfterViewInit, OnDe
     }
   }
 
-  // Posiciona o pino no endereco da loja. So roda quando a config nunca foi salva: se o
-  // lojista ja largou o pino em algum lugar, a coordenada dele vale mais que o palpite do
-  // geocoder e nao pode ser sobrescrita.
+  // So roda quando a config nunca foi salva: o pino que o lojista largou manda sobre o
+  // palpite do geocoder.
   private origemBusca(): void {
     this.origemBuscando = true;
     this._ecommerceService.estabelecimentoOrigemObtem().subscribe(coord => {

@@ -13,14 +13,12 @@ export class Endereco {
   longitude: number;
 }
 
-// So os digitos, sem truncar. Serve tanto para o que o cliente digita quanto para o CEP
-// mascarado que o backend manda no endereco do estabelecimento ("70.747-030").
 export function cepDigitos(cep: string): string {
   return (cep || '').replace(/\D/g, '');
 }
 
-// Mascara 00000-000 aplicada enquanto se digita. O hifen so aparece a partir do sexto
-// digito, senao ele reaparece sozinho quando o usuario tenta apagar e o cursor trava.
+// O hifen so entra a partir do sexto digito: antes disso ele reaparece sozinho quando o
+// usuario apaga, e o cursor trava.
 export function cepFormata(cep: string): string {
   const digitos = cepDigitos(cep).slice(0, 8);
   if (digitos.length <= 5) {

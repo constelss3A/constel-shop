@@ -6,6 +6,9 @@ import { EcommerceService } from 'app/main/apps/ecommerce/ecommerce.service';
 import { AuthenticationService } from 'app/auth/service';
 import { ApiService } from 'app/modulos/api.service';
 import { Endereco, cepDigitos, cepFormata, cepValido } from 'app/modulos/venda/entrega/endereco';
+import {
+  EnderecoCampoObrigatorio, enderecoCampoFalta, enderecoCamposFaltando,
+} from 'app/modulos/venda/entrega/endereco-validacao';
 import { EntregaTipo, FormaPagamento, TrocoMotivo, TrocoResultado, trocoCalcula } from 'app/modulos/movimento/pagamento/pagamento';
 import { Sacola, SacolaLinha } from '../modelo/sacola';
 import { Router } from '@angular/router';
@@ -29,6 +32,8 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
   public enderecoEdicao = false;
   public enderecoForm: Endereco = new Endereco();
   public cepBuscando = false;
+  public enderecoFaltando: EnderecoCampoObrigatorio[] = [];
+  public enderecoTentouSalvar = false;
   public frete = 0.00;
   public foraDeArea = false;
   public freteCalculando = false;
@@ -62,7 +67,6 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
   ngOnInit(): void {
     this.isDelivery = this._ecommerceService.isDelivery;
 
-    // Busca automatica: espera parar de digitar, e so vai quando o CEP esta completo.
     this.cepDigitado
       .pipe(
         map(cep => cepDigitos(cep)),
@@ -168,13 +172,10 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
   selecionaPagamento(forma: { forma: number; nome: string }) {
     this.formaPagamento = forma;
     if (this.isDinheiro) {
-      // Entra pedindo o valor, com o campo aberto. Quem tem o trocado marca "Nao preciso" -
-      // e um ato, nao um campo vazio que a gente interpreta.
       this.trocoNecessario = true;
       return;
     }
-    // Sair do dinheiro zera o troco. Sem isto, escolher Dinheiro, informar R$ 100 e depois
-    // trocar para Pix mandaria o pedido com um troco fantasma de uma escolha abandonada.
+    // Trocar de forma zera o troco, senao o pedido sai com troco de uma escolha abandonada.
     this.trocoNecessario = false;
     this.trocoPara = null;
   }
@@ -204,8 +205,6 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
     }
   }
 
-  // Estado do troco recalculado a cada render: o total muda quando o frete muda, entao o
-  // valor que cobria o pedido pode deixar de cobrir sem o cliente ter tocado no campo.
   get troco(): TrocoResultado {
     return trocoCalcula(this.trocoPara, this.total);
   }
@@ -261,28 +260,41 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
       ? Object.assign(new Endereco(), this.endereco)
       : new Endereco();
     this.enderecoEdicao = true;
+    this.enderecoErrosLimpa();
   }
 
   enderecoEdita() {
     this.enderecoForm = Object.assign(new Endereco(), this.endereco);
     this.enderecoEdicao = true;
+    this.enderecoErrosLimpa();
   }
 
   enderecoCancela() {
     this.enderecoEdicao = false;
+    this.enderecoErrosLimpa();
+  }
+
+  private enderecoErrosLimpa() {
+    this.enderecoTentouSalvar = false;
+    this.enderecoFaltando = [];
   }
 
   enderecoSalva() {
-    if (!this.enderecoValida(this.enderecoForm)) {
+    this.enderecoTentouSalvar = true;
+    this.enderecoFaltando = enderecoCamposFaltando(this.enderecoForm);
+    if (this.enderecoFaltando.length) {
       return;
     }
     this._ecommerceService.enderecoSalva(this.enderecoForm);
     this.enderecoEdicao = false;
+    this.enderecoTentouSalvar = false;
   }
 
-  // Aplica a mascara a cada tecla e, quando o CEP fecha oito digitos, busca sozinho.
-  // O debounce existe porque colar ou digitar rapido dispara varias vezes seguidas, e o
-  // ViaCEP e chamado direto do navegador do cliente - nao vale gastar requisicao a toa.
+  // So marca depois da primeira tentativa: abrir o formulario todo vermelho nao ajuda.
+  enderecoErro(campo: keyof Endereco): boolean {
+    return this.enderecoTentouSalvar && enderecoCampoFalta(this.enderecoFaltando, campo);
+  }
+
   cepMuda(valor: string): void {
     this.enderecoForm.cep = cepFormata(valor);
     this.cepDigitado.next(this.enderecoForm.cep);
@@ -296,8 +308,6 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
       }
       return;
     }
-    // Ja buscado e preenchido: nao repete a chamada quando o campo perde o foco depois da
-    // busca automatica ter rodado.
     if (cep === this.cepBuscado) {
       return;
     }
@@ -317,33 +327,6 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
     });
   }
 
-  private enderecoValida(endereco: Endereco): boolean {
-    if (!endereco.cep) {
-      this._apiService.exibeErro('Informe o CEP');
-      return false;
-    }
-    if (!endereco.logradouro) {
-      this._apiService.exibeErro('Informe o logradouro');
-      return false;
-    }
-    if (!endereco.numero) {
-      this._apiService.exibeErro('Informe o número');
-      return false;
-    }
-    if (!endereco.bairro) {
-      this._apiService.exibeErro('Informe o bairro');
-      return false;
-    }
-    if (!endereco.cidade) {
-      this._apiService.exibeErro('Informe a cidade');
-      return false;
-    }
-    if (!endereco.uf) {
-      this._apiService.exibeErro('Informe a UF');
-      return false;
-    }
-    return true;
-  }
 
   voltarParaCardapio() {
     this._ecommerceService.voltarParaCardapio();
