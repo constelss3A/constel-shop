@@ -10,6 +10,7 @@ import {
   EnderecoCampoObrigatorio, enderecoCampoFalta, enderecoCamposFaltando,
 } from 'app/modulos/venda/entrega/endereco-validacao';
 import { EntregaTipo, FormaPagamento, TrocoMotivo, TrocoResultado, trocoCalcula } from 'app/modulos/movimento/pagamento/pagamento';
+import { trocoResumoTexto } from 'app/modulos/movimento/pagamento/troco-resumo';
 import { Sacola, SacolaLinha } from '../modelo/sacola';
 import { Router } from '@angular/router';
 
@@ -215,6 +216,14 @@ export class EcommerceCheckoutComponent implements OnInit, AfterViewInit, OnDest
 
   get trocoExibido(): boolean {
     return this.trocoNecessario && this.troco.valido;
+  }
+
+  get trocoResumo(): string {
+    return trocoResumoTexto(this.trocoNecessario, this.trocoPara, this.total).texto;
+  }
+
+  get trocoResumoPendente(): boolean {
+    return trocoResumoTexto(this.trocoNecessario, this.trocoPara, this.total).pendente;
   }
 
   finalizar() {

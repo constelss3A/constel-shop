@@ -339,13 +339,11 @@
                         {{ formaPagamento?.nome || 'A escolher' }}
                       </div>
                     </li>
-                    <li class="price-detail" *ngIf="isDinheiro && trocoExibido">
-                      <div class="detail-title">Troco para</div>
-                      <div class="detail-amt">{{ trocoPara | currency:'BRL' }}</div>
-                    </li>
-                    <li class="price-detail" *ngIf="isDinheiro && !trocoNecessario">
+                    <li class="price-detail" *ngIf="isDinheiro">
                       <div class="detail-title">Troco</div>
-                      <div class="detail-amt">Não precisa</div>
+                      <div class="detail-amt" [class.text-muted]="trocoResumoPendente">
+                        {{ trocoResumo }}
+                      </div>
                     </li>
                   </ul>
                 </ng-container>
