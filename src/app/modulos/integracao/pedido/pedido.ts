@@ -1,6 +1,16 @@
 import { Cliente } from 'app/modulos/venda/localizador/cliente/cliente';
 import { PedidoItem } from './pedido-item';
 
+// `trocoPara` e obrigatorio: 0 quando o cliente tem o valor exato.
+export type PedidoPagamento = {
+  sequencial: number;
+  formaIdentificador: number;
+  formaNome: string;
+  total: number;
+  trocoPara: number;
+  pago: boolean;
+};
+
 export class Pedido {
   id: string;
   tipo: PedidoTipo;
@@ -20,23 +30,19 @@ export class Pedido {
     nome: string;
     tipo: number;
   };
-  entrega: {
+  // `local` e `responsavel` sao numeros; `municipio` e string, nao a entidade que o
+  // estabelecimento devolve; `complemento` recusa string vazia mas aceita ausente.
+  pedidoEntrega: {
     cep: string;
     logradouro: string;
-    numero: string;
-    complemento: string;
+    local: number;
     bairro: string;
-    cidade: string;
+    municipio: string;
     uf: string;
-    pontoReferencia: string;
+    responsavel: number;
+    complemento?: string;
   };
-  pagamento: {
-    forma: number;
-    nome: string;
-    // Valor com que o cliente vai pagar em dinheiro. Ausente = valor exato, sem troco.
-    // O entregador depende disto para sair com troco - ver PEDIDO-ENDPOINTS-TAXA-ENTREGA.md.
-    trocoPara?: number;
-  };
+  pedidoPagamentos: PedidoPagamento[];
   referencia: string;
   modelo: PedidoModelo;
   pedidoCliente: Cliente;

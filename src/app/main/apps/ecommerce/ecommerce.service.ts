@@ -19,10 +19,14 @@ import { Pedido, PedidoModelo, PedidoTipo } from 'app/modulos/integracao/pedido/
 import { PedidoItem } from 'app/modulos/integracao/pedido/pedido-item';
 import { Item } from 'app/modulos/recurso/item/item';
 import { Cliente } from 'app/modulos/venda/localizador/cliente/cliente';
-import { Endereco } from 'app/modulos/venda/entrega/endereco';
+import { Endereco, cepDigitos } from 'app/modulos/venda/entrega/endereco';
 import { Coordenada, TaxaEntregaConfig, taxaEntregaConfigPadrao } from 'app/modulos/venda/entrega/taxa-entrega';
 import { taxaEntregaCalcula } from 'app/modulos/venda/entrega/taxa-entrega-calculo';
 import { EntregaTipo } from 'app/modulos/movimento/pagamento/pagamento';
+
+// O backend exige responsavel; 10 e o valor que ele aceita. Demais valores do enum: a levantar.
+const ENTREGA_RESPONSAVEL = 10;
+const CLIENTE_IMAGEM_PADRAO = 'avatar-s-11.jpg';
 
 @Injectable({
   providedIn: 'root'
@@ -716,37 +720,44 @@ export class EcommerceService implements Resolve<any> {
     const entregaTipo = opcoes.entregaTipo || EntregaTipo.Entrega;
     if (this.isDelivery && entregaTipo === EntregaTipo.Entrega && this.endereco) {
       pedido.tipo = PedidoTipo.Delivery;
-      pedido.entrega = {
-        cep: this.endereco.cep,
+      pedido.pedidoEntrega = {
+        cep: cepDigitos(this.endereco.cep),
         logradouro: this.endereco.logradouro,
-        numero: this.endereco.numero,
-        complemento: this.endereco.complemento,
+        local: parseInt(this.endereco.numero, 10) || 0,
         bairro: this.endereco.bairro,
-        cidade: this.endereco.cidade,
+        municipio: this.endereco.cidade,
         uf: this.endereco.uf,
-        pontoReferencia: this.endereco.pontoReferencia,
+        responsavel: ENTREGA_RESPONSAVEL,
       };
-      pedido.referencia = this.enderecoResumo(this.endereco);
+      const complemento = (this.endereco.complemento || '').trim();
+      if (complemento) {
+        pedido.pedidoEntrega.complemento = complemento;
+      }
+      // `referencia` aceita no maximo 20 caracteres - o resumo do endereco nao cabe.
+      pedido.referencia = 'Entrega';
     } else if (this.isDelivery && entregaTipo === EntregaTipo.Retirada) {
       pedido.tipo = PedidoTipo.Autoatendimento;
       pedido.referencia = 'Retirada';
     }
     if (opcoes.formaPagamento) {
-      pedido.pagamento = {
-        forma: opcoes.formaPagamento.forma,
-        nome: opcoes.formaPagamento.nome,
-      };
-      if (opcoes.trocoPara > 0) {
-        pedido.pagamento.trocoPara = opcoes.trocoPara;
-      }
+      pedido.pedidoPagamentos = [{
+        sequencial: 1,
+        formaIdentificador: opcoes.formaPagamento.forma,
+        formaNome: opcoes.formaPagamento.nome,
+        total: 0,
+        trocoPara: opcoes.trocoPara > 0 ? opcoes.trocoPara : 0,
+        pago: false,
+      }];
     }
     const user = this.authService.currentUserValue;
     if (user) {
       pedido.pedidoCliente = new Cliente();
-      pedido.pedidoCliente.identificador = user.id?.toString() || user.email;
+      // O backend exige identificador com 10+ caracteres; o id do login pode ser curto.
+      const id = user.id?.toString() || '';
+      pedido.pedidoCliente.identificador = id.length >= 10 ? id : (user.email || id);
       pedido.pedidoCliente.nome = `${user.firstName || ''} ${user.lastName || ''}`.trim();
       pedido.pedidoCliente.email = user.email || '';
-      pedido.pedidoCliente.imagem = user.avatar || '';
+      pedido.pedidoCliente.imagem = user.avatar || CLIENTE_IMAGEM_PADRAO;
       if (pedido.pedidoCliente.nome.includes('-')) {
         pedido.pedidoCliente.nome = pedido.pedidoCliente.nome.split('-')[0].trim();
       }
@@ -777,6 +788,9 @@ export class EcommerceService implements Resolve<any> {
     pedido.abatimento = 0.00;
     pedido.desconto = 0.00;
     pedido.total = this.sacola.total + frete;
+    if (pedido.pedidoPagamentos?.length) {
+      pedido.pedidoPagamentos[0].total = pedido.total;
+    }
     // const clienteInfo = pedido.pedidoCliente
     //   ? `${pedido.pedidoCliente.nome} (${pedido.pedidoCliente.email})`
     //   : 'Anônimo';
